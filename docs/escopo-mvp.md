@@ -1,5 +1,7 @@
 # Escopo do MVP — Gerador de Senhas Seguras
 
+Apresentação do produto entregue e roteiro de demonstração: [MVP](mvp.md).
+
 ## Objetivo
 
 Oferecer uma aplicação local de linha de comando que gere senhas aleatórias com fonte criptográfica, conforme tamanho e tipos de caracteres definidos pelo usuário. O sistema deve também apresentar a força (super forte, forte, média ou fraca) e estimativas médias de força bruta para cenários antigo e moderno. O público são pessoas que precisam criar senhas e desenvolvedores que desejam reutilizar a função Python.

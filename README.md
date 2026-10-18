@@ -2,7 +2,7 @@
 
 Aplicação Python de linha de comando que gera senhas localmente com aleatoriedade criptográfica. Permite configurar o tamanho e selecionar letras maiúsculas, minúsculas, números e símbolos, sem enviar senhas pela rede. Apresenta a força e tempos médios estimados de força bruta para cenários hipotéticos de processamento antigo e moderno.
 
-[Repositório](https://github.com/andreborten/gerador-senhas) · [Escopo e requisitos](docs/escopo-mvp.md) · [Revisão do MVP](docs/revisao-escopo.md) · [Mermaid](docs/arquitetura.mmd) · [Licença MIT](LICENSE)
+[Repositório](https://github.com/andreborten/gerador-senhas) · [MVP: apresentação e demonstração](docs/mvp.md) · [Escopo e requisitos](docs/escopo-mvp.md) · [Revisão do MVP](docs/revisao-escopo.md) · [Mermaid](docs/arquitetura.mmd) · [Licença MIT](LICENSE)
 
 ## Funcionalidades
 
@@ -207,6 +207,7 @@ gerador-senhas/
 ├── docs/
 │   ├── arquitetura.mmd
 │   ├── forca-senha.md
+│   ├── mvp.md
 │   ├── escopo-mvp.md
 │   └── revisao-escopo.md
 ├── requirements.txt

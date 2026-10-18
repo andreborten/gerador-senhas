@@ -1,5 +1,7 @@
 # Revisão de aderência ao MVP
 
+Apresentação do produto entregue e roteiro de demonstração: [MVP](mvp.md).
+
 Data: 18/10/2026. Escopo de referência: [escopo-mvp.md](escopo-mvp.md).
 
 ## Diagnóstico e correções
