@@ -4,11 +4,11 @@ Apresentação do produto entregue e roteiro de demonstração: [MVP](mvp.md).
 
 ## Objetivo
 
-Oferecer uma aplicação local de linha de comando que gere senhas aleatórias com fonte criptográfica, conforme tamanho e tipos de caracteres definidos pelo usuário. O sistema deve também apresentar a força (super forte, forte, média ou fraca) e estimativas médias de força bruta para cenários antigo e moderno. O público são pessoas que precisam criar senhas e desenvolvedores que desejam reutilizar a função Python.
+Oferecer uma aplicação local com interface gráfica desktop e linha de comando que gere senhas aleatórias com fonte criptográfica, conforme tamanho e tipos de caracteres definidos pelo usuário. O sistema deve também apresentar a força (super forte, forte, média ou fraca) e estimativas médias de força bruta para cenários antigo e moderno. O público são pessoas que precisam criar senhas e desenvolvedores que desejam reutilizar a função Python.
 
 ## Solução e tecnologias
 
-Python 3.10 ou superior, `argparse` para CLI, `secrets` para sorteios, `string` para alfabetos e `pytest` para testes. A referência local é Python 3.15.0. Não há banco de dados, ORM, serviço de IA, autenticação ou dependência externa em execução. JavaScript e interface web são alternativas não escolhidas neste MVP.
+Python 3.10 ou superior, Tkinter/ttk para interface desktop, `argparse` para CLI, `secrets` para sorteios, `string` para alfabetos e `pytest` para testes. A referência local é Python 3.15.0. Não há banco de dados, ORM, serviço de IA, autenticação ou dependência externa em execução. JavaScript e interface web são alternativas não escolhidas neste MVP.
 
 A IA generativa (OpenAI Codex) auxiliou a implementação da função principal, os testes automatizados, a CLI e a documentação. Nenhuma senha é enviada a um modelo de IA.
 
@@ -31,6 +31,9 @@ A IA generativa (OpenAI Codex) auxiliou a implementação da função principal,
 | RF13 | Estimar força bruta | Calcular espaço válido N e média (N+1)/(2×taxa); mostrar cenários antigo 10^6/s e moderno 10^11/s |
 | RF14 | Explicar as estimativas | Exibir ressalva e documentar taxas hipotéticas, limites, hash/hardware e ausência de garantia |
 | RF15 | Preservar saída para scripts | `--somente-senha` imprime apenas a senha; API original continua retornando string |
+| RF16 | Interface gráfica desktop | Tkinter/ttk com tamanho, grupos, geração, classe e tempos; mesmo núcleo da CLI |
+| RF17 | Controle de exibição | Senha mascarada por padrão, opção Mostrar senha e nova geração oculta novamente |
+| RF18 | Consistência da tela | Alterações limpam resultado anterior; erros aparecem sem encerrar a janela |
 
 ## Requisitos não funcionais
 
@@ -47,6 +50,8 @@ A IA generativa (OpenAI Codex) auxiliou a implementação da função principal,
 | RNF09 | Compatibilidade | Sintaxe compatível com Python 3.10+; execução validada em Windows/Python 3.15.0, sem alegar matriz de plataformas testada |
 | RNF10 | Consistência matemática | Considerar grupos obrigatórios por inclusão-exclusão; testar por enumeração independente e fórmulas conhecidas |
 | RNF11 | Robustez numérica | Suportar até 256 caracteres sem overflow, com inteiros e Decimal; apresentar anos em notação científica quando necessário |
+| RNF12 | Disponibilidade da GUI | Requer Tcl/Tk e sessão gráfica; CLI continua independente de Tkinter |
+| RNF13 | Interface legível | Layout organizado, uso por teclado e classificação em texto além da cor |
 
 ## Fluxo de uso
 
@@ -106,4 +111,24 @@ Esses itens são evoluções propostas e não funcionalidades entregues.
 
 ## Aceite da entrega
 
-Executar os comandos do README em ambiente virtual novo e rodar a suíte pytest. Confirmar os requisitos RF01–RF15 e RNF01–RNF11 pela matriz acima, pelos testes e pela inspeção do código. Verificar documentação e diagrama versionados, licença MIT e tag de entrega no Git. O resultado da revisão está em [revisao-escopo.md](revisao-escopo.md).
+Executar os comandos do README em ambiente virtual novo e rodar a suíte pytest. Confirmar os requisitos RF01–RF18 e RNF01–RNF13 pela matriz acima, pelos testes e pela inspeção do código. Verificar documentação e diagrama versionados, licença MIT e tag de entrega no Git. O resultado da revisão está em [revisao-escopo.md](revisao-escopo.md).
+
+## Entrega da interface desktop
+
+## Interface gráfica desktop
+
+A interface usa **Tkinter e ttk**, bibliotecas do Python para janelas e widgets. Execute `python interface.py` ou `python -m gerador_senhas.gui`. No Windows, abra `iniciar.bat` por duplo clique. Com argumentos, esse iniciador continua executando a CLI; `python gerador.py` também permanece disponível.
+
+A janela contém campo de comprimento (8–256), quatro caixas de seleção, botão **Gerar senha**, campo de senha oculto por padrão, opção **Mostrar senha**, classificação em texto e cor, entropia e tempos dos cenários antigo e moderno. Enter também gera. Senhas longas podem ser percorridas horizontalmente no campo. Ao alterar os critérios, o resultado anterior é limpo; cada nova geração volta a ocultar a senha. Erros aparecem na janela sem fechar a aplicação.
+
+A máscara é apenas visual: não protege contra comprometimento da máquina nem garante limpeza da memória. A aplicação não copia automaticamente para a área de transferência, não salva e não envia senhas. As mesmas regras e premissas da CLI valem na interface gráfica.
+
+### Instalação do Tkinter
+
+`requirements.txt` documenta Tkinter/ttk, mas não declara um pacote pip chamado tkinter: ele é fornecido com Python e Tcl/Tk. No instalador oficial do Python para Windows, habilite o componente Tcl/Tk. Verifique com `python -m tkinter`, que deve abrir uma janela de diagnóstico. Em distribuições Linux, instale o pacote Tk da distribuição quando necessário (em Debian/Ubuntu, normalmente `python3-tk`). A interface exige sessão gráfica disponível; a CLI não exige Tkinter.
+
+Referência: [documentação oficial do Tkinter](https://docs.python.org/3/library/tkinter.html). A instalação local foi validada com Python 3.15.0 e Tk 9.0. A execução não ganhou dependências pip; pytest continua sendo a dependência de testes.
+
+### Testes da interface
+
+`python -m pytest -q` inclui testes com widgets Tk reais: geração, máscara e revelação, erros, alterações de configuração, falha da fonte aleatória e tamanho máximo. Sem Tk ou sessão gráfica, esses testes são explicitamente ignorados; os testes de CLI e núcleo continuam disponíveis. Na validação local, **154 testes passaram, sem testes ignorados**.

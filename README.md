@@ -1,6 +1,6 @@
 # Gerador de Senhas Seguras
 
-Aplicação Python de linha de comando que gera senhas localmente com aleatoriedade criptográfica. Permite configurar o tamanho e selecionar letras maiúsculas, minúsculas, números e símbolos, sem enviar senhas pela rede. Apresenta a força e tempos médios estimados de força bruta para cenários hipotéticos de processamento antigo e moderno.
+Aplicação Python com interface gráfica desktop e linha de comando que gera senhas localmente com aleatoriedade criptográfica. Permite configurar o tamanho e selecionar letras maiúsculas, minúsculas, números e símbolos, sem enviar senhas pela rede. Apresenta a força e tempos médios estimados de força bruta para cenários hipotéticos de processamento antigo e moderno.
 
 [Repositório](https://github.com/andreborten/gerador-senhas) · [MVP: apresentação e demonstração](docs/mvp.md) · [Escopo e requisitos](docs/escopo-mvp.md) · [Revisão do MVP](docs/revisao-escopo.md) · [Mermaid](docs/arquitetura.mmd) · [Licença MIT](LICENSE)
 
@@ -51,11 +51,25 @@ A execução usa apenas a biblioteca padrão; `pytest==9.1.1` é a única depend
 
 Se o PowerShell bloquear a ativação, use diretamente `.\.venv\Scripts\python.exe` no lugar de `python`; não é necessário alterar a política de execução.
 
-## Abrir no Windows por duplo clique
+## Interface gráfica desktop
 
-Abra **`iniciar.bat`** na pasta do projeto. Ele usa o Python de `.venv` quando disponível (senão, `python` do PATH), gera a senha e mantém a janela aberta até uma tecla ser pressionada. Erros também permanecem visíveis. É necessário manter o arquivo junto de `gerador.py` e do pacote `gerador_senhas`.
+A interface usa **Tkinter e ttk**, bibliotecas do Python para janelas e widgets. Execute `python interface.py` ou `python -m gerador_senhas.gui`. No Windows, abra `iniciar.bat` por duplo clique. Com argumentos, esse iniciador continua executando a CLI; `python gerador.py` também permanece disponível.
 
-Ao abrir `gerador.py` diretamente, o Windows pode fechar a janela assim que a CLI termina. Isso pode acontecer mesmo quando a execução é bem-sucedida. Para definir opções, abra um terminal na pasta do projeto e use os comandos abaixo. A CLI continua encerrando normalmente para permitir automação.
+A janela contém campo de comprimento (8–256), quatro caixas de seleção, botão **Gerar senha**, campo de senha oculto por padrão, opção **Mostrar senha**, classificação em texto e cor, entropia e tempos dos cenários antigo e moderno. Enter também gera. Senhas longas podem ser percorridas horizontalmente no campo. Ao alterar os critérios, o resultado anterior é limpo; cada nova geração volta a ocultar a senha. Erros aparecem na janela sem fechar a aplicação.
+
+A máscara é apenas visual: não protege contra comprometimento da máquina nem garante limpeza da memória. A aplicação não copia automaticamente para a área de transferência, não salva e não envia senhas. As mesmas regras e premissas da CLI valem na interface gráfica.
+
+### Instalação do Tkinter
+
+`requirements.txt` documenta Tkinter/ttk, mas não declara um pacote pip chamado tkinter: ele é fornecido com Python e Tcl/Tk. No instalador oficial do Python para Windows, habilite o componente Tcl/Tk. Verifique com `python -m tkinter`, que deve abrir uma janela de diagnóstico. Em distribuições Linux, instale o pacote Tk da distribuição quando necessário (em Debian/Ubuntu, normalmente `python3-tk`). A interface exige sessão gráfica disponível; a CLI não exige Tkinter.
+
+Referência: [documentação oficial do Tkinter](https://docs.python.org/3/library/tkinter.html). A instalação local foi validada com Python 3.15.0 e Tk 9.0. A execução não ganhou dependências pip; pytest continua sendo a dependência de testes.
+
+### Testes da interface
+
+`python -m pytest -q` inclui testes com widgets Tk reais: geração, máscara e revelação, erros, alterações de configuração, falha da fonte aleatória e tamanho máximo. Sem Tk ou sessão gráfica, esses testes são explicitamente ignorados; os testes de CLI e núcleo continuam disponíveis. Na validação local, **154 testes passaram, sem testes ignorados**.
+
+Guia dedicado: [interface gráfica](docs/interface-grafica.md).
 
 ## Uso pela CLI
 
@@ -139,6 +153,7 @@ Detalhamento: [metodologia e premissas](docs/forca-senha.md).
 | Tecnologia | Uso |
 | --- | --- |
 | Python 3.10+ | Linguagem; referência local 3.15.0 |
+| `tkinter` / `ttk` | Interface gráfica desktop, fornecida com Python/Tcl/Tk |
 | `argparse` | Processamento de argumentos e ajuda |
 | `secrets` e `string` | Sorteios criptográficos e alfabetos |
 | `math`, `decimal`, `itertools` e `dataclasses` | Entropia, contagem e estimativas sem dependências adicionais |
@@ -163,9 +178,9 @@ A aplicação não grava senhas em arquivos ou logs e não usa rede. A saída é
 python -m pytest -q
 ```
 
-A suíte contém 144 casos: todas as 15 combinações não vazias de grupos nos tamanhos 8, 20 e 256; presença e exclusão de caracteres; valores e tipos inválidos; rejeição de candidata incompleta; falha da fonte criptográfica; ajuda, entradas por script/módulo e códigos de saída. A CLI também é executada em subprocessos reais. A avaliação é testada por enumeração independente de alfabetos pequenos, fórmulas conhecidas, limites das quatro classes, tempos, formatação, configurações inválidas e o máximo de 256 caracteres.
+A suíte contém 154 casos: todas as 15 combinações não vazias de grupos nos tamanhos 8, 20 e 256; presença e exclusão de caracteres; valores e tipos inválidos; rejeição de candidata incompleta; falha da fonte criptográfica; ajuda, entradas por script/módulo e códigos de saída. A CLI também é executada em subprocessos reais. A avaliação é testada por enumeração independente de alfabetos pequenos, fórmulas conhecidas, limites das quatro classes, tempos, formatação, configurações inválidas e o máximo de 256 caracteres.
 
-A rejeição e a falha da fonte são testadas com substituições controladas. Não usamos ausência de duplicatas em uma amostra como prova de segurança. Os testes não demonstram imprevisibilidade criptográfica nem garantem ausência de colisões. Resultado local da revisão: **144 testes passaram em Windows/Python 3.15.0**.
+A rejeição e a falha da fonte são testadas com substituições controladas. Não usamos ausência de duplicatas em uma amostra como prova de segurança. Os testes não demonstram imprevisibilidade criptográfica nem garantem ausência de colisões. Resultado local da revisão: **154 testes passaram em Windows/Python 3.15.0**.
 
 ## Arquitetura e comunicação
 
@@ -174,8 +189,14 @@ A rejeição e a falha da fonte são testadas com substituições controladas. N
 ```mermaid
 flowchart TD
     U["Usuário"] -->|"Argumentos: tamanho e grupos"| CLI["CLI: argparse"]
+    U -->|"Campos e botão Gerar"| GUI["GUI: Tkinter e ttk"]
+    GUI -->|"Mesma configuração"| V
+    GUI -->|"Configuração válida"| F
+    G -->|"Senha válida"| GUI
+    F -->|"Classe, bits e tempos"| GUI
+    GUI -->|"Senha mascarada, relatório ou erro"| U
     CLI -->|"Configuração"| V{"Validação: 8 a 256 e algum grupo?"}
-    V -->|"Não: erro, saída 2"| E["stderr sem senha"]
+    V -->|"Não: erro, saída 2"| E["Erro sem senha: stderr na CLI ou mensagem na GUI"]
     V -->|"Sim: alfabeto permitido"| G["Núcleo: gerar_senha"]
     G -->|"Solicita caracteres"| S["secrets.choice: fonte criptográfica do sistema"]
     S -->|"Caracteres sorteados"| G
@@ -201,19 +222,23 @@ O arquivo fonte está em [docs/arquitetura.mmd](docs/arquitetura.mmd). O diagram
 
 ```text
 gerador-senhas/
+├── interface.py
 ├── iniciar.bat
 ├── gerador.py
 ├── gerador_senhas/
 │   ├── __init__.py
 │   ├── __main__.py
+│   ├── gui.py
 │   ├── forca.py
 │   ├── core.py
 │   └── cli.py
 ├── tests/test_gerador.py
 ├── tests/test_forca.py
+├── tests/test_gui.py
 ├── docs/
 │   ├── arquitetura.mmd
 │   ├── forca-senha.md
+│   ├── interface-grafica.md
 │   ├── mvp.md
 │   ├── escopo-mvp.md
 │   └── revisao-escopo.md
@@ -226,10 +251,10 @@ gerador-senhas/
 
 ## Limitações e Próximos Passos
 
-- CLI local: não há web, API HTTP, persistência ou sincronização.
+- Interfaces locais desktop e CLI: não há web, API HTTP, persistência ou sincronização.
 - A força é estimada para senhas uniformes deste gerador; não há avaliação de senhas humanas, verificação de vazamentos ou frases-senha.
 - Taxas de ataque fixas são ilustrativas; não há benchmark nem previsão específica por hash/hardware.
-- Não há saída mascarada, integração com gerenciadores ou limpeza garantida de memória.
+- Há máscara visual na GUI; a CLI exibe texto claro. Não há integração com gerenciadores ou limpeza garantida de memória.
 - Não há geração em lote ou alfabetos personalizados.
 - Python 3.10+ é o mínimo de sintaxe; a revisão não executou uma matriz de versões/sistemas.
 - Próximas evoluções: CI multiplataforma, empacotamento, frases-senha e opções adicionais de alfabeto.
@@ -238,11 +263,11 @@ Veja os limites e critérios de aceite completos no [escopo do MVP](docs/escopo-
 
 ## Versionamento e entrega
 
-As tags `v1.0.0` e `v1.1.0` preservam entregas anteriores. A versão `v1.2.0` inclui força e estimativas; a saída padrão passa a incluir o relatório. Scripts que dependem de uma única linha devem usar `--somente-senha`. Tags identificam pontos de entrega; não pressupõem a criação de uma página GitHub Release.
+As tags `v1.0.0` e `v1.1.0` preservam entregas anteriores. A versão `v1.3.0` adiciona a interface Tkinter. A versão `v1.2.0` inclui força e estimativas; a saída padrão passa a incluir o relatório. Scripts que dependem de uma única linha devem usar `--somente-senha`. Tags identificam pontos de entrega; não pressupõem a criação de uma página GitHub Release.
 
 ```shell
 git fetch --tags
-git switch --detach v1.2.0
+git switch --detach v1.3.0
 ```
 
 Para contribuir, crie uma branch, execute os testes e use Conventional Commits, por exemplo `feat: adiciona frases-senha` ou `docs: esclarece instalação`.

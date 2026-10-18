@@ -1,2 +1,4 @@
-# Execução: biblioteca padrão. Dependência para testes:
+# Interface: tkinter/ttk, fornecidos pelo Python com Tcl/Tk (nao instalar via pip).
+# Windows: habilitar Tcl/Tk no instalador Python. Linux: instalar pacote Tk do sistema.
+# Execucao: somente biblioteca padrao. Testes:
 pytest==9.1.1

@@ -2,13 +2,13 @@
 
 ## Visão do produto
 
-Este documento apresenta o produto mínimo viável implementado, baseado nos [requisitos funcionais e não funcionais](escopo-mvp.md). A base funcional é a versão `v1.2.0`. O MVP é uma aplicação Python CLI executável localmente, não apenas uma proposta de desenvolvimento.
+Este documento apresenta o produto mínimo viável implementado, baseado nos [requisitos funcionais e não funcionais](escopo-mvp.md). A base funcional é a versão `v1.3.0`. O MVP é uma aplicação Python com GUI Tkinter e CLI executável localmente, não apenas uma proposta de desenvolvimento.
 
 **Problema:** criar senhas conforme as regras de um serviço e compreender sua resistência estimada a tentativas de adivinhação.
 
 **Objetivo:** permitir gerar uma senha aleatória, selecionar comprimento e tipos de caracteres e visualizar uma avaliação de força acompanhada de estimativas de força bruta.
 
-**Público:** usuários que utilizam terminal e desenvolvedores que desejam integrar a função em scripts Python.
+**Público:** usuários de interface gráfica ou terminal e desenvolvedores que desejam integrar a função em scripts Python.
 
 **Valor entregue:** geração com fonte criptográfica do sistema, execução local sem envio de senhas e avaliação transparente, com premissas documentadas.
 
@@ -71,7 +71,7 @@ No Linux/macOS, substitua esse caminho por `.venv/bin/python`. Se necessário, u
 
 A execução não exige pacotes externos. `requirements.txt` contém `pytest==9.1.1` para os testes. Não é necessário banco de dados, servidor, conta de serviço ou chave de API.
 
-No Windows, também é possível abrir `iniciar.bat` por duplo clique. O iniciador mantém o resultado ou erro visível até uma tecla ser pressionada; abrir `gerador.py` diretamente pode fechar a janela ao terminar.
+No Windows, também é possível abrir `iniciar.bat` por duplo clique. Sem argumentos, o iniciador abre a GUI. Com argumentos, executa a CLI e mantém o resultado visível.
 
 ## Roteiro de demonstração e aceite
 
@@ -110,14 +110,14 @@ São usados dois cenários hipotéticos offline: antigo, com 1 milhão de tentat
 - `core.py`: validação compartilhada e geração com `secrets.choice`, usando rejeição de candidatas incompletas.
 - `cli.py`: argumentos, ajuda, saída e tratamento de erros.
 - `forca.py`: contagem de combinações válidas, classificação e tempos com suporte a 256 caracteres sem overflow.
-- `tests/test_gerador.py` e `tests/test_forca.py`: 144 casos aprovados na validação registrada da versão v1.2.0, incluindo as 15 combinações válidas de grupos, erros, fronteiras das classes e verificação matemática independente.
+- `tests/test_gerador.py` e `tests/test_forca.py`: 154 casos aprovados na validação da versão v1.3.0, incluindo as 15 combinações válidas de grupos, erros, fronteiras das classes e verificação matemática independente.
 - Tipagem, docstrings, licença MIT, dependências declaradas e `.gitignore` integram a entrega.
 
-A correspondência detalhada com RNF01–RNF11 está no [escopo](escopo-mvp.md); o histórico de verificação está no [relatório de revisão](revisao-escopo.md). Testes não provam imprevisibilidade criptográfica nem ausência absoluta de colisões.
+A correspondência detalhada com RNF01–RNF13 está no [escopo](escopo-mvp.md); o histórico de verificação está no [relatório de revisão](revisao-escopo.md). Testes não provam imprevisibilidade criptográfica nem ausência absoluta de colisões.
 
 ## Limites do MVP
 
-A senha aparece em texto claro no terminal. Não há armazenamento, sincronização, saída mascarada ou limpeza garantida da memória. Configurações fracas continuam permitidas e são identificadas pela avaliação. O programa não verifica vazamentos nem avalia senhas humanas existentes.
+A CLI exibe texto claro; a GUI permite revelar a senha mascarada. Há máscara visual na GUI, mas não há armazenamento, sincronização ou limpeza garantida da memória. Configurações fracas continuam permitidas e são identificadas pela avaliação. O programa não verifica vazamentos nem avalia senhas humanas existentes.
 
 Não fazem parte desta entrega: interface web, API HTTP, banco de dados, geração em lote, alfabetos personalizados, medição real de hardware ou matriz automatizada de sistemas operacionais. Nenhuma dessas funções é necessária para executar a alternativa CLI selecionada.
 
@@ -130,6 +130,24 @@ Não fazem parte desta entrega: interface web, API HTTP, banco de dados, geraç�
 
 ## Entrega e créditos
 
-Código no [GitHub](https://github.com/andreborten/gerador-senhas), com base funcional marcada pela [tag v1.2.0](https://github.com/andreborten/gerador-senhas/tree/v1.2.0). Este documento consolida a apresentação do MVP após essa tag; a documentação atual está na branch `main`.
+Código no [GitHub](https://github.com/andreborten/gerador-senhas), com base funcional marcada pela [tag v1.3.0](https://github.com/andreborten/gerador-senhas/tree/v1.3.0). Este documento consolida a apresentação do MVP após essa tag; a documentação atual está na branch `main`.
 
 Autor: andreborten. Desenvolvimento assistido por OpenAI Codex na lógica, CLI, testes e documentação. A aplicação não usa IA durante a execução. Licença: [MIT](../LICENSE).
+
+## Interface gráfica desktop
+
+A interface usa **Tkinter e ttk**, bibliotecas do Python para janelas e widgets. Execute `python interface.py` ou `python -m gerador_senhas.gui`. No Windows, abra `iniciar.bat` por duplo clique. Com argumentos, esse iniciador continua executando a CLI; `python gerador.py` também permanece disponível.
+
+A janela contém campo de comprimento (8–256), quatro caixas de seleção, botão **Gerar senha**, campo de senha oculto por padrão, opção **Mostrar senha**, classificação em texto e cor, entropia e tempos dos cenários antigo e moderno. Enter também gera. Senhas longas podem ser percorridas horizontalmente no campo. Ao alterar os critérios, o resultado anterior é limpo; cada nova geração volta a ocultar a senha. Erros aparecem na janela sem fechar a aplicação.
+
+A máscara é apenas visual: não protege contra comprometimento da máquina nem garante limpeza da memória. A aplicação não copia automaticamente para a área de transferência, não salva e não envia senhas. As mesmas regras e premissas da CLI valem na interface gráfica.
+
+### Instalação do Tkinter
+
+`requirements.txt` documenta Tkinter/ttk, mas não declara um pacote pip chamado tkinter: ele é fornecido com Python e Tcl/Tk. No instalador oficial do Python para Windows, habilite o componente Tcl/Tk. Verifique com `python -m tkinter`, que deve abrir uma janela de diagnóstico. Em distribuições Linux, instale o pacote Tk da distribuição quando necessário (em Debian/Ubuntu, normalmente `python3-tk`). A interface exige sessão gráfica disponível; a CLI não exige Tkinter.
+
+Referência: [documentação oficial do Tkinter](https://docs.python.org/3/library/tkinter.html). A instalação local foi validada com Python 3.15.0 e Tk 9.0. A execução não ganhou dependências pip; pytest continua sendo a dependência de testes.
+
+### Testes da interface
+
+`python -m pytest -q` inclui testes com widgets Tk reais: geração, máscara e revelação, erros, alterações de configuração, falha da fonte aleatória e tamanho máximo. Sem Tk ou sessão gráfica, esses testes são explicitamente ignorados; os testes de CLI e núcleo continuam disponíveis. Na validação local, **154 testes passaram, sem testes ignorados**.

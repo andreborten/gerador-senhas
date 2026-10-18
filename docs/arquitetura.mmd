@@ -1,7 +1,13 @@
 flowchart TD
     U["Usuário"] -->|"Argumentos: tamanho e grupos"| CLI["CLI: argparse"]
+    U -->|"Campos e botão Gerar"| GUI["GUI: Tkinter e ttk"]
+    GUI -->|"Mesma configuração"| V
+    GUI -->|"Configuração válida"| F
+    G -->|"Senha válida"| GUI
+    F -->|"Classe, bits e tempos"| GUI
+    GUI -->|"Senha mascarada, relatório ou erro"| U
     CLI -->|"Configuração"| V{"Validação: 8 a 256 e algum grupo?"}
-    V -->|"Não: erro, saída 2"| E["stderr sem senha"]
+    V -->|"Não: erro, saída 2"| E["Erro sem senha: stderr na CLI ou mensagem na GUI"]
     V -->|"Sim: alfabeto permitido"| G["Núcleo: gerar_senha"]
     G -->|"Solicita caracteres"| S["secrets.choice: fonte criptográfica do sistema"]
     S -->|"Caracteres sorteados"| G

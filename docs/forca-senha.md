@@ -27,3 +27,7 @@ As taxas são hipóteses ilustrativas de menor e maior capacidade, não benchmar
 Exemplo verificável: oito dígitos gerados uniformemente dão N = 100.000.000, cerca de 26,58 bits e classificação fraca. A média estimada é 50,0000005 segundos no cenário antigo e 0,000500000005 segundo no moderno. A CLI arredonda a apresentação, exibindo “menos de 1 segundo” no segundo caso. Para tempos enormes, usa notação científica em anos (ano de 365,25 dias), mantendo cálculos com inteiros e Decimal para suportar até 256 caracteres.
 
 A saída padrão contém senha, força, entropia, dois tempos e ressalva. `--somente-senha` suprime o relatório para uso em scripts; a função `gerar_senha` continua retornando apenas uma string. A API `avaliar_configuracao` recebe os mesmos parâmetros de geração e retorna `Avaliacao` com combinações, entropia, classificação e tempos em segundos. Passe exatamente a mesma configuração usada para gerar a senha.
+
+## Apresentação na interface gráfica
+
+A GUI Tkinter aplica a mesma configuração, fórmulas, classes e taxas deste documento. Exibe a força em texto e cor, entropia e tempos após gerar; oculta a senha por padrão e permite revelá-la. Alterar critérios limpa a avaliação anterior. Consulte o [guia da interface](interface-grafica.md).

@@ -35,3 +35,9 @@ Limitações remanescentes são declaradas: configurações fracas continuam pos
 A versão v1.2.0 implementa RF12–RF15. Os testes incluem fronteiras de 40/60/80 bits, as quatro classes via CLI, comparação da contagem com enumeração independente, fórmula de dois grupos, tempos conhecidos para oito dígitos e ausência de overflow em 256 caracteres para todas as combinações. Total: 144 casos aprovados.
 
 As estimativas usam o tamanho e grupos da geração uniforme, incluindo as restrições de composição. Classificações e taxas são convenções ilustrativas do projeto, não garantia de segurança nem benchmark. [Metodologia completa, fórmulas e fontes](forca-senha.md). A documentação e o Mermaid agora representam essa funcionalidade como entregue.
+
+## Incremento v1.3.0 — Interface gráfica
+
+Implementados RF16–RF18 e RNF12–RNF13: interface Tkinter/ttk com os mesmos critérios da CLI, senha mascarada, classificação em texto/cor, estimativas e mensagens de erro locais. O resultado é limpo ao alterar opções. `iniciar.bat` abre a GUI quando executado sem argumentos. A CLI continua disponível.
+
+Validação atual: **154 testes passaram**, incluindo 10 casos de GUI com widgets reais em Windows/Python 3.15.0/Tk 9.0. Um teste de geometria detectou inicialmente corte no rodapé; o espaçamento foi ajustado e a verificação passou. As seções anteriores preservam a revisão da versão v1.2.0. [Guia da interface](interface-grafica.md).
