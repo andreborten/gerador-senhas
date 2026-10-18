@@ -35,6 +35,7 @@ def selecionar_grupos(
     usar_maiusculas: bool = True, usar_minusculas: bool = True,
 ) -> list[str]:
     """Valida a configuração e retorna os alfabetos disjuntos habilitados."""
+    # bool é subclasse de int, mas não representa um comprimento válido nesta API.
     if type(tamanho) is not int:
         raise TypeError("O tamanho deve ser um número inteiro.")
     if not 8 <= tamanho <= 256:

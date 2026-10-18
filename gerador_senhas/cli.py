@@ -18,26 +18,23 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--somente-senha", action="store_true",
                         help="imprime apenas a senha, sem avaliação (para scripts)")
     args = parser.parse_args(argv)
+    opcoes = {
+        "usar_simbolos": not args.sem_simbolos,
+        "usar_numeros": not args.sem_numeros,
+        "usar_maiusculas": not args.sem_maiusculas,
+        "usar_minusculas": not args.sem_minusculas,
+    }
     try:
-        senha = gerar_senha(
-            args.tamanho,
-            usar_simbolos=not args.sem_simbolos,
-            usar_numeros=not args.sem_numeros,
-            usar_maiusculas=not args.sem_maiusculas,
-            usar_minusculas=not args.sem_minusculas,
-        )
+        senha = gerar_senha(args.tamanho, **opcoes)
+        # O mesmo conjunto de critérios evita divergência entre senha e avaliação.
+        avaliacao = None if args.somente_senha else avaliar_configuracao(args.tamanho, **opcoes)
     except ValueError as erro:
         parser.error(str(erro))
     except OSError:
         print("Não foi possível acessar a fonte de aleatoriedade segura.", file=sys.stderr)
         return 1
     print(senha)
-    if not args.somente_senha:
-        avaliacao = avaliar_configuracao(
-            args.tamanho, usar_simbolos=not args.sem_simbolos,
-            usar_numeros=not args.sem_numeros, usar_maiusculas=not args.sem_maiusculas,
-            usar_minusculas=not args.sem_minusculas,
-        )
+    if avaliacao is not None:
         print(f"Força: {avaliacao.classificacao} ({avaliacao.entropia_bits:.2f} bits)")
         print("Tempo médio de força bruta offline — cenários hipotéticos:")
         print(f"  Antigo (10^6 tentativas/s): {formatar_tempo(avaliacao.segundos_antigo)}")

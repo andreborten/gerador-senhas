@@ -41,3 +41,7 @@ As estimativas usam o tamanho e grupos da geração uniforme, incluindo as restr
 Implementados RF16–RF18 e RNF12–RNF13: interface Tkinter/ttk com os mesmos critérios da CLI, senha mascarada, classificação em texto/cor, estimativas e mensagens de erro locais. O resultado é limpo ao alterar opções. `iniciar.bat` abre a GUI quando executado sem argumentos. A CLI continua disponível.
 
 Validação atual: **154 testes passaram**, incluindo 10 casos de GUI com widgets reais em Windows/Python 3.15.0/Tk 9.0. Um teste de geometria detectou inicialmente corte no rodapé; o espaçamento foi ajustado e a verificação passou. As seções anteriores preservam a revisão da versão v1.2.0. [Guia da interface](interface-grafica.md).
+
+## Manutenção v1.3.1
+
+Revisão de segurança, Clean Code, SOLID, dependências, comentários e tratamento de erros concluída. A suíte atual possui 195 testes aprovados no ambiente principal. Os resultados anteriores deste documento são históricos. Detalhes, limitações e evidências: [revisao-tecnica.md](revisao-tecnica.md). Decisões: [decisoes.md](decisoes.md).

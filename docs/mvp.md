@@ -2,7 +2,7 @@
 
 ## Visão do produto
 
-Este documento apresenta o produto mínimo viável implementado, baseado nos [requisitos funcionais e não funcionais](escopo-mvp.md). A base funcional é a versão `v1.3.0`. O MVP é uma aplicação Python com GUI Tkinter e CLI executável localmente, não apenas uma proposta de desenvolvimento.
+Este documento apresenta o produto mínimo viável implementado, baseado nos [requisitos funcionais e não funcionais](escopo-mvp.md). A base funcional é a versão `v1.3.1`. O MVP é uma aplicação Python com GUI Tkinter e CLI executável localmente, não apenas uma proposta de desenvolvimento.
 
 **Problema:** criar senhas conforme as regras de um serviço e compreender sua resistência estimada a tentativas de adivinhação.
 
@@ -110,7 +110,7 @@ São usados dois cenários hipotéticos offline: antigo, com 1 milhão de tentat
 - `core.py`: validação compartilhada e geração com `secrets.choice`, usando rejeição de candidatas incompletas.
 - `cli.py`: argumentos, ajuda, saída e tratamento de erros.
 - `forca.py`: contagem de combinações válidas, classificação e tempos com suporte a 256 caracteres sem overflow.
-- `tests/test_gerador.py` e `tests/test_forca.py`: 154 casos aprovados na validação da versão v1.3.0, incluindo as 15 combinações válidas de grupos, erros, fronteiras das classes e verificação matemática independente.
+- `tests/test_gerador.py` e `tests/test_forca.py`: 195 casos aprovados na validação da versão v1.3.1, incluindo as 15 combinações válidas de grupos, erros, fronteiras das classes e verificação matemática independente.
 - Tipagem, docstrings, licença MIT, dependências declaradas e `.gitignore` integram a entrega.
 
 A correspondência detalhada com RNF01–RNF13 está no [escopo](escopo-mvp.md); o histórico de verificação está no [relatório de revisão](revisao-escopo.md). Testes não provam imprevisibilidade criptográfica nem ausência absoluta de colisões.
@@ -130,13 +130,13 @@ Não fazem parte desta entrega: interface web, API HTTP, banco de dados, geraç�
 
 ## Entrega e créditos
 
-Código no [GitHub](https://github.com/andreborten/gerador-senhas), com base funcional marcada pela [tag v1.3.0](https://github.com/andreborten/gerador-senhas/tree/v1.3.0). Este documento consolida a apresentação do MVP após essa tag; a documentação atual está na branch `main`.
+Código no [GitHub](https://github.com/andreborten/gerador-senhas), com base funcional marcada pela [tag v1.3.1](https://github.com/andreborten/gerador-senhas/tree/v1.3.1). Este documento consolida a apresentação do MVP após essa tag; a documentação atual está na branch `main`.
 
 Autor: andreborten. Desenvolvimento assistido por OpenAI Codex na lógica, CLI, testes e documentação. A aplicação não usa IA durante a execução. Licença: [MIT](../LICENSE).
 
 ## Interface gráfica desktop
 
-A interface usa **Tkinter e ttk**, bibliotecas do Python para janelas e widgets. Execute `python interface.py` ou `python -m gerador_senhas.gui`. No Windows, abra `iniciar.bat` por duplo clique. Com argumentos, esse iniciador continua executando a CLI; `python gerador.py` também permanece disponível.
+A interface usa **Tkinter e ttk**, bibliotecas do Python para janelas e widgets. Execute `python interface.py` ou `python -m gerador_senhas.entrada_gui`. No Windows, abra `iniciar.bat` por duplo clique. Com argumentos, esse iniciador continua executando a CLI; `python gerador.py` também permanece disponível.
 
 A janela contém campo de comprimento (8–256), quatro caixas de seleção, botão **Gerar senha**, campo de senha oculto por padrão, opção **Mostrar senha**, classificação em texto e cor, entropia e tempos dos cenários antigo e moderno. Enter também gera. Senhas longas podem ser percorridas horizontalmente no campo. Ao alterar os critérios, o resultado anterior é limpo; cada nova geração volta a ocultar a senha. Erros aparecem na janela sem fechar a aplicação.
 
@@ -150,4 +150,8 @@ Referência: [documentação oficial do Tkinter](https://docs.python.org/3/libra
 
 ### Testes da interface
 
-`python -m pytest -q` inclui testes com widgets Tk reais: geração, máscara e revelação, erros, alterações de configuração, falha da fonte aleatória e tamanho máximo. Sem Tk ou sessão gráfica, esses testes são explicitamente ignorados; os testes de CLI e núcleo continuam disponíveis. Na validação local, **154 testes passaram, sem testes ignorados**.
+`python -m pytest -q` inclui testes com widgets Tk reais: geração, máscara e revelação, erros, alterações de configuração, falha da fonte aleatória e tamanho máximo. Sem Tk ou sessão gráfica, esses testes são explicitamente ignorados; os testes de CLI e núcleo continuam disponíveis. Na validação local, **195 testes passaram, sem testes ignorados**.
+
+## Revisão de manutenção
+
+A revisão v1.3.1 acrescenta diagnóstico de Tkinter/sessão gráfica indisponível, mantém a CLI independente da GUI e testa limpeza do resultado e restauração da máscara em erro. Consulte [decisões técnicas](decisoes.md) e [revisão técnica, segurança e testes](revisao-tecnica.md).

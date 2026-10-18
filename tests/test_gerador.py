@@ -128,3 +128,13 @@ def test_entradas_e_ajuda(modulo):
     assert ajuda.returncode == 0
     for flag in ("--tamanho", "--sem-simbolos", "--sem-numeros", "--sem-maiusculas", "--sem-minusculas"):
         assert flag in ajuda.stdout
+
+
+def test_falha_avaliacao_nao_exibe_senha(monkeypatch, capsys):
+    def falhar(*args, **kwargs):
+        raise ValueError("configuração inconsistente")
+    monkeypatch.setattr(cli, "avaliar_configuracao", falhar)
+    with pytest.raises(SystemExit) as erro:
+        cli.main([])
+    assert erro.value.code == 2
+    assert capsys.readouterr().out == ""

@@ -1,4 +1,5 @@
 """Interface gráfica local com Tkinter/ttk e núcleo compartilhado com a CLI."""
+import sys
 import tkinter as tk
 from tkinter import ttk
 
@@ -12,12 +13,24 @@ class Aplicacao:
     """Janela de configuração, geração e avaliação de senhas."""
 
     def __init__(self, janela: tk.Tk) -> None:
+        """Conecta estado, aparência, controles e eventos da janela recebida."""
         self.janela = janela
         janela.title("Gerador de Senhas Seguras")
         janela.geometry("780x730")
         janela.minsize(700, 690)
         janela.configure(background="#eef2f7")
-        estilo = ttk.Style(janela)
+        self._configurar_estilo()
+        self._iniciar_variaveis()
+        self._montar_layout()
+        self.tamanho.trace_add("write", self.invalidar)
+        for variavel in self.opcoes.values():
+            variavel.trace_add("write", self.invalidar)
+        janela.bind("<Return>", lambda evento: self.gerar())
+        self.campo_tamanho.focus_set()
+
+    def _configurar_estilo(self) -> None:
+        """Centraliza aparência, sem regras de geração."""
+        estilo = ttk.Style(self.janela)
         estilo.theme_use("clam")
         estilo.configure("TFrame", background="#eef2f7")
         estilo.configure("Card.TFrame", background="white")
@@ -30,6 +43,9 @@ class Aplicacao:
                          font=("Segoe UI", 12, "bold"), padding=(18, 8))
         estilo.map("Primary.TButton", background=[("active", "#1849a4")])
         estilo.configure("TButton", font=("Segoe UI", 10), padding=6)
+
+    def _iniciar_variaveis(self) -> None:
+        """Inicializa o estado de apresentação da janela."""
         self.tamanho = tk.StringVar(value="20")
         self.opcoes = {nome: tk.BooleanVar(value=True) for nome in
                        ("usar_minusculas", "usar_maiusculas", "usar_numeros", "usar_simbolos")}
@@ -40,7 +56,10 @@ class Aplicacao:
         self.antigo = tk.StringVar(value="—")
         self.moderno = tk.StringVar(value="—")
         self.status = tk.StringVar(value="Pronto. A senha não é salva nem enviada pela rede.")
-        container = ttk.Frame(janela, padding=16)
+
+    def _montar_layout(self) -> None:
+        """Organiza controles e resultado em seções visuais."""
+        container = ttk.Frame(self.janela, padding=16)
         container.pack(fill="both", expand=True)
         container.columnconfigure(0, weight=1)
         ttk.Label(container, text="Gerador de Senhas", style="Title.TLabel").grid(sticky="w")
@@ -82,15 +101,12 @@ class Aplicacao:
                   style="Sub.TLabel", wraplength=680).grid(row=5, sticky="ew", pady=(12, 6))
         self.rotulo_status = ttk.Label(container, textvariable=self.status, style="Sub.TLabel", wraplength=680)
         self.rotulo_status.grid(row=6, sticky="ew")
-        self.tamanho.trace_add("write", self.invalidar)
-        for variavel in self.opcoes.values():
-            variavel.trace_add("write", self.invalidar)
-        janela.bind("<Return>", lambda evento: self.gerar())
-        self.campo_tamanho.focus_set()
 
     def invalidar(self, *_: str) -> None:
         """Remove resultado anterior quando critérios mudam, evitando avaliação desatualizada."""
         self.senha.set("")
+        self.mostrar.set(False)
+        self.alternar_visibilidade()
         self.classe.set("Aguardando geração")
         self.rotulo_classe.configure(foreground="#18283b")
         self.entropia.set("Clique em Gerar senha para aplicar os critérios.")
@@ -130,12 +146,25 @@ class Aplicacao:
         self.status.set("Senha gerada. Use Mostrar senha para visualizar. Use uma senha única por conta.")
 
 
-def main() -> None:
-    """Abre a interface gráfica até o usuário fechar a janela."""
-    janela = tk.Tk()
-    Aplicacao(janela)
-    janela.mainloop()
+def main() -> int:
+    """Abre a janela; informa ausência de ambiente gráfico sem traceback."""
+    try:
+        janela = tk.Tk()
+    except tk.TclError:
+        print("Não foi possível abrir a interface gráfica. Verifique Tcl/Tk e a sessão "
+              "gráfica, ou execute python gerador.py para usar a CLI.", file=sys.stderr)
+        return 1
+    try:
+        Aplicacao(janela)
+        janela.mainloop()
+    finally:
+        # Libera recursos Tk também se a construção da interface falhar.
+        try:
+            janela.destroy()
+        except tk.TclError:
+            pass  # A janela pode já ter sido destruída pelo botão de fechar.
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

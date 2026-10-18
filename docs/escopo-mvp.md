@@ -117,7 +117,7 @@ Executar os comandos do README em ambiente virtual novo e rodar a suíte pytest.
 
 ## Interface gráfica desktop
 
-A interface usa **Tkinter e ttk**, bibliotecas do Python para janelas e widgets. Execute `python interface.py` ou `python -m gerador_senhas.gui`. No Windows, abra `iniciar.bat` por duplo clique. Com argumentos, esse iniciador continua executando a CLI; `python gerador.py` também permanece disponível.
+A interface usa **Tkinter e ttk**, bibliotecas do Python para janelas e widgets. Execute `python interface.py` ou `python -m gerador_senhas.entrada_gui`. No Windows, abra `iniciar.bat` por duplo clique. Com argumentos, esse iniciador continua executando a CLI; `python gerador.py` também permanece disponível.
 
 A janela contém campo de comprimento (8–256), quatro caixas de seleção, botão **Gerar senha**, campo de senha oculto por padrão, opção **Mostrar senha**, classificação em texto e cor, entropia e tempos dos cenários antigo e moderno. Enter também gera. Senhas longas podem ser percorridas horizontalmente no campo. Ao alterar os critérios, o resultado anterior é limpo; cada nova geração volta a ocultar a senha. Erros aparecem na janela sem fechar a aplicação.
 
@@ -131,4 +131,8 @@ Referência: [documentação oficial do Tkinter](https://docs.python.org/3/libra
 
 ### Testes da interface
 
-`python -m pytest -q` inclui testes com widgets Tk reais: geração, máscara e revelação, erros, alterações de configuração, falha da fonte aleatória e tamanho máximo. Sem Tk ou sessão gráfica, esses testes são explicitamente ignorados; os testes de CLI e núcleo continuam disponíveis. Na validação local, **154 testes passaram, sem testes ignorados**.
+`python -m pytest -q` inclui testes com widgets Tk reais: geração, máscara e revelação, erros, alterações de configuração, falha da fonte aleatória e tamanho máximo. Sem Tk ou sessão gráfica, esses testes são explicitamente ignorados; os testes de CLI e núcleo continuam disponíveis. Na validação local, **195 testes passaram, sem testes ignorados**.
+
+## Revisão de manutenção
+
+A revisão v1.3.1 acrescenta diagnóstico de Tkinter/sessão gráfica indisponível, mantém a CLI independente da GUI e testa limpeza do resultado e restauração da máscara em erro. Consulte [decisões técnicas](decisoes.md) e [revisão técnica, segurança e testes](revisao-tecnica.md).

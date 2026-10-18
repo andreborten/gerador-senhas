@@ -102,3 +102,26 @@ def test_cli_invalida_sem_relatorio():
     resultado = executar("-t", "7", relatorio=True)
     assert resultado.returncode == 2
     assert resultado.stdout == ""
+
+
+@pytest.mark.parametrize("valor", [float("nan"), float("inf"), float("-inf"), -1])
+def test_entropia_invalida(valor):
+    with pytest.raises(ValueError):
+        forca.classificar(valor)
+
+
+@pytest.mark.parametrize("valor", [True, "80", None])
+def test_tipo_entropia(valor):
+    with pytest.raises(TypeError):
+        forca.classificar(valor)
+
+
+@pytest.mark.parametrize("valor", ["NaN", "sNaN", "Infinity", "-Infinity", "-1"])
+def test_duracao_invalida(valor):
+    with pytest.raises(ValueError):
+        forca.formatar_tempo(Decimal(valor))
+
+
+def test_tipo_duracao():
+    with pytest.raises(TypeError):
+        forca.formatar_tempo(1.0)

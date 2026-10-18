@@ -1,5 +1,8 @@
 flowchart TD
     U["Usuário"] -->|"Argumentos: tamanho e grupos"| CLI["CLI: argparse"]
+    U -->|"Abrir interface.py"| INI["entrada_gui: diagnóstico de Tkinter e sessão"]
+    INI -->|"Instalação ou sessão indisponível"| E
+    INI -->|"Abre janela"| GUI
     U -->|"Campos e botão Gerar"| GUI["GUI: Tkinter e ttk"]
     GUI -->|"Mesma configuração"| V
     GUI -->|"Configuração válida"| F

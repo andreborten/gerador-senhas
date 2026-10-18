@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from decimal import Decimal, localcontext
 from itertools import combinations
-from math import log2
+from math import isfinite, log2
 
 from .core import selecionar_grupos
 
@@ -23,6 +23,10 @@ class Avaliacao:
 
 def classificar(entropia_bits: float) -> str:
     """Aplica faixas do projeto: <40, <60, <80 e >=80 bits."""
+    if isinstance(entropia_bits, bool) or not isinstance(entropia_bits, (int, float)):
+        raise TypeError("A entropia deve ser numérica.")
+    if not isfinite(entropia_bits) or entropia_bits < 0:
+        raise ValueError("A entropia deve ser finita e não negativa.")
     if entropia_bits < 40:
         return "fraca"
     if entropia_bits < 60:
@@ -64,6 +68,10 @@ def avaliar_configuracao(
 
 def formatar_tempo(segundos: Decimal) -> str:
     """Exibe duração aproximada; tempos muito grandes usam notação científica."""
+    if not isinstance(segundos, Decimal):
+        raise TypeError("A duração deve ser um Decimal.")
+    if not segundos.is_finite() or segundos < 0:
+        raise ValueError("A duração deve ser finita e não negativa.")
     if segundos < 1:
         return "menos de 1 segundo"
     for limite, divisor, unidade in (

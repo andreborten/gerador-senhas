@@ -3,6 +3,7 @@ import pytest
 
 tk = pytest.importorskip("tkinter")
 from gerador_senhas import gui
+from test_gerador import COMBINACOES, OPCOES, GRUPOS
 
 
 @pytest.fixture
@@ -79,3 +80,56 @@ def test_maximo_e_janela(app):
     assert "anos" in app.moderno.get()
     limite = app.rotulo_status.winfo_rooty() + app.rotulo_status.winfo_height()
     assert limite <= app.janela.winfo_rooty() + app.janela.winfo_height()
+
+
+
+@pytest.mark.parametrize("ativos", COMBINACOES)
+def test_gui_todos_os_grupos(app, ativos):
+    app.tamanho.set("8")
+    for nome, ativo in zip(OPCOES, ativos):
+        app.opcoes[nome].set(ativo)
+    app.gerar()
+    senha = app.senha.get()
+    grupos = [grupo for ativo, grupo in zip(ativos, GRUPOS) if ativo]
+    assert len(senha) == 8
+    assert set(senha) <= set("".join(grupos))
+    assert all(set(senha) & set(grupo) for grupo in grupos)
+
+
+@pytest.mark.parametrize("tamanho,classe", [(8, "Fraca"), (16, "Média"), (20, "Forte"), (25, "Super forte")])
+def test_gui_classes(app, tamanho, classe):
+    app.tamanho.set(str(tamanho))
+    for nome, opcao in app.opcoes.items():
+        opcao.set(nome == "usar_numeros")
+    app.gerar()
+    assert app.classe.get() == classe
+
+
+def test_falha_apos_resultado_limpa_dados(app, monkeypatch):
+    app.gerar()
+    app.mostrar.set(True)
+    app.alternar_visibilidade()
+    def falhar(*args, **kwargs):
+        raise OSError("indisponível")
+    monkeypatch.setattr(gui, "gerar_senha", falhar)
+    app.gerar()
+    assert app.senha.get() == ""
+    assert app.campo_senha.cget("show") == "*"
+    assert app.antigo.get() == "—"
+    assert app.moderno.get() == "—"
+
+
+def test_sem_sessao_grafica(monkeypatch, capsys):
+    def falhar():
+        raise tk.TclError("sem display")
+    monkeypatch.setattr(tk, "Tk", falhar)
+    assert gui.main() == 1
+    assert capsys.readouterr().out == ""
+
+
+def test_ciclo_principal_fecha_janela(monkeypatch):
+    janela = tk.Tk()
+    janela.withdraw()
+    monkeypatch.setattr(tk, "Tk", lambda: janela)
+    janela.after(10, janela.destroy)
+    assert gui.main() == 0

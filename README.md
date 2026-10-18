@@ -2,7 +2,7 @@
 
 Aplicação Python com interface gráfica desktop e linha de comando que gera senhas localmente com aleatoriedade criptográfica. Permite configurar o tamanho e selecionar letras maiúsculas, minúsculas, números e símbolos, sem enviar senhas pela rede. Apresenta a força e tempos médios estimados de força bruta para cenários hipotéticos de processamento antigo e moderno.
 
-[Repositório](https://github.com/andreborten/gerador-senhas) · [MVP: apresentação e demonstração](docs/mvp.md) · [Escopo e requisitos](docs/escopo-mvp.md) · [Revisão do MVP](docs/revisao-escopo.md) · [Mermaid](docs/arquitetura.mmd) · [Licença MIT](LICENSE)
+[Repositório](https://github.com/andreborten/gerador-senhas) · [MVP: apresentação e demonstração](docs/mvp.md) · [Escopo e requisitos](docs/escopo-mvp.md) · [Revisão do MVP](docs/revisao-escopo.md) · [Mermaid](docs/arquitetura.mmd) · [Decisões técnicas](docs/decisoes.md) · [Revisão técnica e segurança](docs/revisao-tecnica.md) · [Licença MIT](LICENSE)
 
 ## Funcionalidades
 
@@ -53,7 +53,7 @@ Se o PowerShell bloquear a ativação, use diretamente `.\.venv\Scripts\python.e
 
 ## Interface gráfica desktop
 
-A interface usa **Tkinter e ttk**, bibliotecas do Python para janelas e widgets. Execute `python interface.py` ou `python -m gerador_senhas.gui`. No Windows, abra `iniciar.bat` por duplo clique. Com argumentos, esse iniciador continua executando a CLI; `python gerador.py` também permanece disponível.
+A interface usa **Tkinter e ttk**, bibliotecas do Python para janelas e widgets. Execute `python interface.py` ou `python -m gerador_senhas.entrada_gui`. No Windows, abra `iniciar.bat` por duplo clique. Com argumentos, esse iniciador continua executando a CLI; `python gerador.py` também permanece disponível.
 
 A janela contém campo de comprimento (8–256), quatro caixas de seleção, botão **Gerar senha**, campo de senha oculto por padrão, opção **Mostrar senha**, classificação em texto e cor, entropia e tempos dos cenários antigo e moderno. Enter também gera. Senhas longas podem ser percorridas horizontalmente no campo. Ao alterar os critérios, o resultado anterior é limpo; cada nova geração volta a ocultar a senha. Erros aparecem na janela sem fechar a aplicação.
 
@@ -67,7 +67,7 @@ Referência: [documentação oficial do Tkinter](https://docs.python.org/3/libra
 
 ### Testes da interface
 
-`python -m pytest -q` inclui testes com widgets Tk reais: geração, máscara e revelação, erros, alterações de configuração, falha da fonte aleatória e tamanho máximo. Sem Tk ou sessão gráfica, esses testes são explicitamente ignorados; os testes de CLI e núcleo continuam disponíveis. Na validação local, **154 testes passaram, sem testes ignorados**.
+`python -m pytest -q` inclui testes com widgets Tk reais: geração, máscara e revelação, erros, alterações de configuração, falha da fonte aleatória e tamanho máximo. Sem Tk ou sessão gráfica, esses testes são explicitamente ignorados; os testes de CLI e núcleo continuam disponíveis. Na validação local, **195 testes passaram, sem testes ignorados**.
 
 Guia dedicado: [interface gráfica](docs/interface-grafica.md).
 
@@ -178,9 +178,9 @@ A aplicação não grava senhas em arquivos ou logs e não usa rede. A saída é
 python -m pytest -q
 ```
 
-A suíte contém 154 casos: todas as 15 combinações não vazias de grupos nos tamanhos 8, 20 e 256; presença e exclusão de caracteres; valores e tipos inválidos; rejeição de candidata incompleta; falha da fonte criptográfica; ajuda, entradas por script/módulo e códigos de saída. A CLI também é executada em subprocessos reais. A avaliação é testada por enumeração independente de alfabetos pequenos, fórmulas conhecidas, limites das quatro classes, tempos, formatação, configurações inválidas e o máximo de 256 caracteres.
+A suíte contém 195 casos: todas as 15 combinações não vazias de grupos nos tamanhos 8, 20 e 256; presença e exclusão de caracteres; valores e tipos inválidos; rejeição de candidata incompleta; falha da fonte criptográfica; ajuda, entradas por script/módulo e códigos de saída. A CLI também é executada em subprocessos reais. A avaliação é testada por enumeração independente de alfabetos pequenos, fórmulas conhecidas, limites das quatro classes, tempos, formatação, configurações inválidas e o máximo de 256 caracteres.
 
-A rejeição e a falha da fonte são testadas com substituições controladas. Não usamos ausência de duplicatas em uma amostra como prova de segurança. Os testes não demonstram imprevisibilidade criptográfica nem garantem ausência de colisões. Resultado local da revisão: **154 testes passaram em Windows/Python 3.15.0**.
+A rejeição e a falha da fonte são testadas com substituições controladas. Não usamos ausência de duplicatas em uma amostra como prova de segurança. Os testes não demonstram imprevisibilidade criptográfica nem garantem ausência de colisões. Resultado local da revisão: **195 testes passaram em Windows/Python 3.15.0**.
 
 ## Arquitetura e comunicação
 
@@ -189,6 +189,9 @@ A rejeição e a falha da fonte são testadas com substituições controladas. N
 ```mermaid
 flowchart TD
     U["Usuário"] -->|"Argumentos: tamanho e grupos"| CLI["CLI: argparse"]
+    U -->|"Abrir interface.py"| INI["entrada_gui: diagnóstico de Tkinter e sessão"]
+    INI -->|"Instalação ou sessão indisponível"| E
+    INI -->|"Abre janela"| GUI
     U -->|"Campos e botão Gerar"| GUI["GUI: Tkinter e ttk"]
     GUI -->|"Mesma configuração"| V
     GUI -->|"Configuração válida"| F
@@ -228,6 +231,7 @@ gerador-senhas/
 ├── gerador_senhas/
 │   ├── __init__.py
 │   ├── __main__.py
+│   ├── entrada_gui.py
 │   ├── gui.py
 │   ├── forca.py
 │   ├── core.py
@@ -235,9 +239,12 @@ gerador-senhas/
 ├── tests/test_gerador.py
 ├── tests/test_forca.py
 ├── tests/test_gui.py
+├── tests/test_inicializacao.py
 ├── docs/
 │   ├── arquitetura.mmd
 │   ├── forca-senha.md
+│   ├── decisoes.md
+│   ├── revisao-tecnica.md
 │   ├── interface-grafica.md
 │   ├── mvp.md
 │   ├── escopo-mvp.md
@@ -256,21 +263,47 @@ gerador-senhas/
 - Taxas de ataque fixas são ilustrativas; não há benchmark nem previsão específica por hash/hardware.
 - Há máscara visual na GUI; a CLI exibe texto claro. Não há integração com gerenciadores ou limpeza garantida de memória.
 - Não há geração em lote ou alfabetos personalizados.
-- Python 3.10+ é o mínimo de sintaxe; a revisão não executou uma matriz de versões/sistemas.
+- Python 3.10+ é o mínimo de sintaxe; validação completa em Windows/3.15 e parcial em 3.12, sem matriz de sistemas.
 - Próximas evoluções: CI multiplataforma, empacotamento, frases-senha e opções adicionais de alfabeto.
 
 Veja os limites e critérios de aceite completos no [escopo do MVP](docs/escopo-mvp.md).
 
 ## Versionamento e entrega
 
-As tags `v1.0.0` e `v1.1.0` preservam entregas anteriores. A versão `v1.3.0` adiciona a interface Tkinter. A versão `v1.2.0` inclui força e estimativas; a saída padrão passa a incluir o relatório. Scripts que dependem de uma única linha devem usar `--somente-senha`. Tags identificam pontos de entrega; não pressupõem a criação de uma página GitHub Release.
+As tags `v1.0.0` e `v1.1.0` preservam entregas anteriores. A versão `v1.3.1` melhora diagnóstico, validações e organização após revisão técnica. A versão `v1.3.0` adiciona a interface Tkinter. A versão `v1.2.0` inclui força e estimativas; a saída padrão passa a incluir o relatório. Scripts que dependem de uma única linha devem usar `--somente-senha`. Tags identificam pontos de entrega; não pressupõem a criação de uma página GitHub Release.
 
 ```shell
 git fetch --tags
-git switch --detach v1.3.0
+git switch --detach v1.3.1
 ```
 
 Para contribuir, crie uma branch, execute os testes e use Conventional Commits, por exemplo `feat: adiciona frases-senha` ou `docs: esclarece instalação`.
+
+## Evolução da implementação
+
+| Etapa / versão | Implementação e motivo | Registro |
+| --- | --- | --- |
+| Estrutura inicial | Script CLI, dependências, README e diagrama inicial | `4ee4c6c`, `0816d44` |
+| Sincronização | Conciliação dos históricos local e remoto | `b9ec2be` |
+| v1.0.0 | Geração com secrets, tamanho e símbolos opcionais, 12 testes unittest, licença e documentação de entrega | `68c91cc` |
+| v1.1.0 | Pacote modular, quatro grupos independentes, tipagem, validação e 96 casos pytest; escopo formal e revisão | `203aa82`; correção documental `f5dfa06` |
+| v1.2.0 | Força, entropia e tempos hipotéticos com contagem do espaço válido; 144 testes; --somente-senha mantém saída para scripts | `b54f1fb` |
+| Apresentação do MVP | Jornada, demonstração, aceite e limites consolidados | `15ada2d` |
+| Abertura no Windows | iniciar.bat mantém resultado visível, resolvendo o fechamento da janela ao terminar a CLI | `6fceffc` |
+| v1.3.0 | GUI Tkinter/ttk com configuração, máscara, força e tempos; 154 testes; iniciador abre GUI sem argumentos | `cbd5514` |
+| v1.3.1 | Revisão de segurança/SOLID/Clean Code; tratamento de inicialização Tk, validação numérica, parâmetros únicos na CLI, organização da GUI, 195 testes e registro de decisões | Revisão atual |
+
+Os commits vazios `4ef3815` e `cd61c30` marcam entregas solicitadas, sem mudanças funcionais. Tags antigas são preservadas. O diagnóstico e as escolhas de cada etapa estão em [decisões técnicas](docs/decisoes.md).
+
+## Qualidade, segurança e manutenção
+
+A revisão atual registrou **195 testes aprovados** no Windows/Python 3.15.0 e **95% de cobertura medida**, incluindo ramificações; subprocessos não estão agregados na medição. Bandit não encontrou achados e pip-audit não encontrou vulnerabilidades conhecidas nos pacotes resolvidos na consulta de 18/10/2026. Não se trata de certificação ou garantia de ausência de falhas.
+
+O código tem comentários e docstrings nas funções de produção. As responsabilidades estão separadas, mas a aderência a SOLID é parcial: SRP é favorecido, OCP/DIP têm limites, LSP não é aplicável à ausência de hierarquia própria e não foram introduzidas abstrações artificiais. Nenhuma dependência externa é necessária em execução; ferramentas de auditoria são opcionais.
+
+A inicialização por `interface.py` ou `python -m gerador_senhas.entrada_gui` informa falta de Tkinter/sessão gráfica e indica a CLI. Valores inválidos não geram senha; falhas inesperadas de programação não são ocultadas. Riscos residuais incluem exposição no terminal/memória, máquina comprometida, configurações fracas e interpretação indevida de estimativas.
+
+Veja a [revisão técnica completa](docs/revisao-tecnica.md) para achados, correções, comandos de reprodução, matriz dos testes e limitações.
 
 ## Créditos e licença
 
