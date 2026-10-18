@@ -1,4 +1,4 @@
-"""Entrada compat?vel para execução e importação do gerador."""
+"""Entrada compatível para execução e importação do gerador."""
 from gerador_senhas import gerar_senha
 from gerador_senhas.cli import main
 
