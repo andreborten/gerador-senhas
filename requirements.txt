@@ -1,0 +1,4 @@
+# Sem dependencias externas para a arquitetura Python CLI definida no Mermaid.
+# argparse: interface CLI; secrets: aleatoriedade criptografica.
+# string: conjuntos de caracteres; math: estimativa de forca.
+# unittest: testes automatizados. Todos pertencem a biblioteca padrao do Python.

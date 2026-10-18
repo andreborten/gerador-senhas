@@ -1,0 +1,33 @@
+flowchart TD
+    U["Usuário"]
+    subgraph LOCAL["Python CLI — execução local, sem envio de senhas pela rede"]
+        CLI["Interface argparse<br/>Padrão proposto: 20 caracteres"]
+        V{"Configuração válida?<br/>Tamanho permitido e algum tipo selecionado"}
+        A["Alfabeto: string<br/>Maiúsculas, minúsculas, números e símbolos"]
+        G["Gerador de senhas<br/>Sorteio uniforme"]
+        S["secrets<br/>Aleatoriedade criptográfica"]
+        C{"Atende aos tipos selecionados?"}
+        F["Indicador de força: math<br/>Considera tamanho, alfabeto e restrições"]
+        O["Saída protegida<br/>Exibição solicitada, sem gravação ou logs de senhas"]
+    end
+    U -->|"Informa opções e solicita geração"| CLI
+    CLI -->|"Envia configuração"| V
+    V -->|"Inválida: retorna erro sem senha"| CLI
+    CLI -->|"Orienta correção"| U
+    V -->|"Válida: envia tipos selecionados"| A
+    A -->|"Entrega alfabeto e tamanho"| G
+    G -->|"Solicita sorteios"| S
+    S -->|"Retorna caracteres"| G
+    G -->|"Envia candidata"| C
+    C -->|"Não: descarta e repete"| G
+    C -->|"Sim: entrega senha"| O
+    A -->|"Envia tamanho e alfabeto"| F
+    CLI -->|"Envia restrições"| F
+    F -->|"Retorna estimativa e avisos"| O
+    O -->|"Exibe senha e avaliação"| U
+    R["Orientações: senha única por conta,<br/>gerenciador de senhas e MFA"] -->|"Orienta uso seguro"| U
+    T["Testes: unittest<br/>Tamanho, caracteres, configurações inválidas e critérios"]
+    T -.->|"Testa validações"| V
+    T -.->|"Testa propriedades"| G
+    T -.->|"Testa critérios"| C
+    T -.->|"Testa estimativa"| F
