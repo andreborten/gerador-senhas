@@ -45,3 +45,7 @@ Validação atual: **154 testes passaram**, incluindo 10 casos de GUI com widget
 ## Manutenção v1.3.1
 
 Revisão de segurança, Clean Code, SOLID, dependências, comentários e tratamento de erros concluída. A suíte atual possui 195 testes aprovados no ambiente principal. Os resultados anteriores deste documento são históricos. Detalhes, limitações e evidências: [revisao-tecnica.md](revisao-tecnica.md). Decisões: [decisoes.md](decisoes.md).
+
+## Revisão posterior v1.3.2
+
+Os números anteriores são históricos. A [revisão de refatoração](revisao-refatoracao.md) registra 201 testes aprovados, 98% de cobertura medida, correções numéricas, preservação de contratos e cinco prioridades para a próxima release.

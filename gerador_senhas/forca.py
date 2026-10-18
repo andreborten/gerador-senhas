@@ -1,6 +1,6 @@
 """Estimativas para senhas uniformes deste gerador, não para senhas humanas."""
 from dataclasses import dataclass
-from decimal import Decimal, localcontext
+from decimal import Context, Decimal, localcontext
 from itertools import combinations
 from math import isfinite, log2
 
@@ -21,11 +21,12 @@ class Avaliacao:
     segundos_moderno: Decimal
 
 
-def classificar(entropia_bits: float) -> str:
+def classificar(entropia_bits: int | float) -> str:
     """Aplica faixas do projeto: <40, <60, <80 e >=80 bits."""
     if isinstance(entropia_bits, bool) or not isinstance(entropia_bits, (int, float)):
         raise TypeError("A entropia deve ser numérica.")
-    if not isfinite(entropia_bits) or entropia_bits < 0:
+    # Inteiros Python são finitos; convertê-los em float pode causar overflow.
+    if entropia_bits < 0 or (isinstance(entropia_bits, float) and not isfinite(entropia_bits)):
         raise ValueError("A entropia deve ser finita e não negativa.")
     if entropia_bits < 40:
         return "fraca"
@@ -50,20 +51,24 @@ def avaliar_configuracao(
     grupos = selecionar_grupos(tamanho, usar_simbolos, usar_numeros=usar_numeros,
                               usar_maiusculas=usar_maiusculas,
                               usar_minusculas=usar_minusculas)
+    espaco = _contar_combinacoes(tamanho, grupos)
+    bits = log2(espaco)
+    # Decimal suporta os resultados de 256 caracteres sem overflow de float.
+    with localcontext(Context(prec=28)):
+        antigo = Decimal(espaco + 1) / Decimal(2 * TAXA_ANTIGA)
+        moderno = Decimal(espaco + 1) / Decimal(2 * TAXA_MODERNA)
+    return Avaliacao(espaco, bits, classificar(bits), antigo, moderno)
+
+
+def _contar_combinacoes(tamanho: int, grupos: list[str]) -> int:
+    """Conta senhas que contêm todos os grupos disjuntos previamente validados."""
     tamanhos = [len(grupo) for grupo in grupos]
     total = sum(tamanhos)
-    espaco = sum(
+    return sum(
         (-1)**quantidade * (total - sum(subconjunto))**tamanho
         for quantidade in range(len(tamanhos) + 1)
         for subconjunto in combinations(tamanhos, quantidade)
     )
-    bits = log2(espaco)
-    # Decimal suporta os resultados de 256 caracteres sem overflow de float.
-    with localcontext() as contexto:
-        contexto.prec = 28
-        antigo = Decimal(espaco + 1) / Decimal(2 * TAXA_ANTIGA)
-        moderno = Decimal(espaco + 1) / Decimal(2 * TAXA_MODERNA)
-    return Avaliacao(espaco, bits, classificar(bits), antigo, moderno)
 
 
 def formatar_tempo(segundos: Decimal) -> str:
@@ -72,6 +77,13 @@ def formatar_tempo(segundos: Decimal) -> str:
         raise TypeError("A duração deve ser um Decimal.")
     if not segundos.is_finite() or segundos < 0:
         raise ValueError("A duração deve ser finita e não negativa.")
+    # Contexto novo evita herdar precisão, arredondamento ou traps do chamador.
+    with localcontext(Context(prec=28)):
+        return _formatar_duracao(segundos)
+
+
+def _formatar_duracao(segundos: Decimal) -> str:
+    """Seleciona a unidade de uma duração validada, sob contexto decimal estável."""
     if segundos < 1:
         return "menos de 1 segundo"
     for limite, divisor, unidade in (

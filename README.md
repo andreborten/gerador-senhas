@@ -4,6 +4,10 @@ Aplicação Python com interface gráfica desktop e linha de comando que gera se
 
 [Repositório](https://github.com/andreborten/gerador-senhas) · [MVP: apresentação e demonstração](docs/mvp.md) · [Escopo e requisitos](docs/escopo-mvp.md) · [Revisão do MVP](docs/revisao-escopo.md) · [Mermaid](docs/arquitetura.mmd) · [Decisões técnicas](docs/decisoes.md) · [Revisão técnica e segurança](docs/revisao-tecnica.md) · [Licença MIT](LICENSE)
 
+## O que o projeto resolve
+
+Ajuda a gerar senhas aleatórias conforme comprimento e grupos de caracteres exigidos por um serviço, e a compreender sua força estimada. Pode ser usado em janela desktop ou terminal. Não armazena contas e senhas, não substitui um gerenciador e não garante proteção contra phishing ou máquina comprometida.
+
 ## Funcionalidades
 
 - Uma senha por execução; padrão de 20 caracteres com os quatro grupos.
@@ -67,7 +71,7 @@ Referência: [documentação oficial do Tkinter](https://docs.python.org/3/libra
 
 ### Testes da interface
 
-`python -m pytest -q` inclui testes com widgets Tk reais: geração, máscara e revelação, erros, alterações de configuração, falha da fonte aleatória e tamanho máximo. Sem Tk ou sessão gráfica, esses testes são explicitamente ignorados; os testes de CLI e núcleo continuam disponíveis. Na validação local, **195 testes passaram, sem testes ignorados**.
+`python -m pytest -q` inclui testes com widgets Tk reais: geração, máscara e revelação, erros, alterações de configuração, falha da fonte aleatória e tamanho máximo. Sem Tk ou sessão gráfica, esses testes são explicitamente ignorados; os testes de CLI e núcleo continuam disponíveis. Na validação local, **201 testes passaram, sem testes ignorados**.
 
 Guia dedicado: [interface gráfica](docs/interface-grafica.md).
 
@@ -178,9 +182,9 @@ A aplicação não grava senhas em arquivos ou logs e não usa rede. A saída é
 python -m pytest -q
 ```
 
-A suíte contém 195 casos: todas as 15 combinações não vazias de grupos nos tamanhos 8, 20 e 256; presença e exclusão de caracteres; valores e tipos inválidos; rejeição de candidata incompleta; falha da fonte criptográfica; ajuda, entradas por script/módulo e códigos de saída. A CLI também é executada em subprocessos reais. A avaliação é testada por enumeração independente de alfabetos pequenos, fórmulas conhecidas, limites das quatro classes, tempos, formatação, configurações inválidas e o máximo de 256 caracteres.
+A suíte contém 201 casos: todas as 15 combinações não vazias de grupos nos tamanhos 8, 20 e 256; presença e exclusão de caracteres; valores e tipos inválidos; rejeição de candidata incompleta; falha da fonte criptográfica; ajuda, entradas por script/módulo e códigos de saída. A CLI também é executada em subprocessos reais. A avaliação é testada por enumeração independente de alfabetos pequenos, fórmulas conhecidas, limites das quatro classes, tempos, formatação, configurações inválidas e o máximo de 256 caracteres.
 
-A rejeição e a falha da fonte são testadas com substituições controladas. Não usamos ausência de duplicatas em uma amostra como prova de segurança. Os testes não demonstram imprevisibilidade criptográfica nem garantem ausência de colisões. Resultado local da revisão: **195 testes passaram em Windows/Python 3.15.0**.
+A rejeição e a falha da fonte são testadas com substituições controladas. Não usamos ausência de duplicatas em uma amostra como prova de segurança. Os testes não demonstram imprevisibilidade criptográfica nem garantem ausência de colisões. Resultado local da revisão: **201 testes passaram em Windows/Python 3.15.0**.
 
 ## Arquitetura e comunicação
 
@@ -244,6 +248,7 @@ gerador-senhas/
 │   ├── arquitetura.mmd
 │   ├── forca-senha.md
 │   ├── decisoes.md
+│   ├── revisao-refatoracao.md
 │   ├── revisao-tecnica.md
 │   ├── interface-grafica.md
 │   ├── mvp.md
@@ -270,11 +275,11 @@ Veja os limites e critérios de aceite completos no [escopo do MVP](docs/escopo-
 
 ## Versionamento e entrega
 
-As tags `v1.0.0` e `v1.1.0` preservam entregas anteriores. A versão `v1.3.1` melhora diagnóstico, validações e organização após revisão técnica. A versão `v1.3.0` adiciona a interface Tkinter. A versão `v1.2.0` inclui força e estimativas; a saída padrão passa a incluir o relatório. Scripts que dependem de uma única linha devem usar `--somente-senha`. Tags identificam pontos de entrega; não pressupõem a criação de uma página GitHub Release.
+As tags `v1.0.0` e `v1.1.0` preservam entregas anteriores. A versão `v1.3.2` refatora CLI/GUI e corrige casos extremos de avaliação, com contratos de saída verificados. A versão `v1.3.1` melhora diagnóstico, validações e organização após revisão técnica. A versão `v1.3.0` adiciona a interface Tkinter. A versão `v1.2.0` inclui força e estimativas; a saída padrão passa a incluir o relatório. Scripts que dependem de uma única linha devem usar `--somente-senha`. Tags identificam pontos de entrega; não pressupõem a criação de uma página GitHub Release.
 
 ```shell
 git fetch --tags
-git switch --detach v1.3.1
+git switch --detach v1.3.2
 ```
 
 Para contribuir, crie uma branch, execute os testes e use Conventional Commits, por exemplo `feat: adiciona frases-senha` ou `docs: esclarece instalação`.
@@ -291,19 +296,30 @@ Para contribuir, crie uma branch, execute os testes e use Conventional Commits, 
 | Apresentação do MVP | Jornada, demonstração, aceite e limites consolidados | `15ada2d` |
 | Abertura no Windows | iniciar.bat mantém resultado visível, resolvendo o fechamento da janela ao terminar a CLI | `6fceffc` |
 | v1.3.0 | GUI Tkinter/ttk com configuração, máscara, força e tempos; 154 testes; iniciador abre GUI sem argumentos | `cbd5514` |
-| v1.3.1 | Revisão de segurança/SOLID/Clean Code; tratamento de inicialização Tk, validação numérica, parâmetros únicos na CLI, organização da GUI, 195 testes e registro de decisões | Revisão atual |
+| v1.3.1 | Revisão de segurança/SOLID/Clean Code; tratamento de inicialização Tk, validação numérica, parâmetros únicos na CLI, organização da GUI, 195 testes e registro de decisões | `163ed04` |
+| v1.3.2 | Refatoração DRY/SRP, funções menores, correções de contexto Decimal e inteiros grandes, 201 testes e plano de cinco testes prioritários | Revisão atual |
 
 Os commits vazios `4ef3815` e `cd61c30` marcam entregas solicitadas, sem mudanças funcionais. Tags antigas são preservadas. O diagnóstico e as escolhas de cada etapa estão em [decisões técnicas](docs/decisoes.md).
 
 ## Qualidade, segurança e manutenção
 
-A revisão atual registrou **195 testes aprovados** no Windows/Python 3.15.0 e **95% de cobertura medida**, incluindo ramificações; subprocessos não estão agregados na medição. Bandit não encontrou achados e pip-audit não encontrou vulnerabilidades conhecidas nos pacotes resolvidos na consulta de 18/10/2026. Não se trata de certificação ou garantia de ausência de falhas.
+A revisão atual registrou **201 testes aprovados** no Windows/Python 3.15.0 e **98% de cobertura medida**, incluindo ramificações; subprocessos não estão agregados na medição. Bandit não encontrou achados e pip-audit não encontrou vulnerabilidades conhecidas nos pacotes resolvidos na consulta de 18/10/2026. Não se trata de certificação ou garantia de ausência de falhas.
 
 O código tem comentários e docstrings nas funções de produção. As responsabilidades estão separadas, mas a aderência a SOLID é parcial: SRP é favorecido, OCP/DIP têm limites, LSP não é aplicável à ausência de hierarquia própria e não foram introduzidas abstrações artificiais. Nenhuma dependência externa é necessária em execução; ferramentas de auditoria são opcionais.
 
 A inicialização por `interface.py` ou `python -m gerador_senhas.entrada_gui` informa falta de Tkinter/sessão gráfica e indica a CLI. Valores inválidos não geram senha; falhas inesperadas de programação não são ocultadas. Riscos residuais incluem exposição no terminal/memória, máquina comprometida, configurações fracas e interpretação indevida de estimativas.
 
 Veja a [revisão técnica completa](docs/revisao-tecnica.md) para achados, correções, comandos de reprodução, matriz dos testes e limitações.
+
+## Próxima release: prioridades de testes
+
+1. CLI com encoding restritivo e pipe interrompido.
+2. Instalação limpa e abertura real por iniciar.bat em diferentes caminhos.
+3. Matriz de versões Python e sistemas operacionais.
+4. Propriedades em todos os comprimentos de 8 a 256 e combinações de grupos.
+5. GUI em diferentes DPI, telas e navegação por teclado.
+
+Os critérios de aceite e as lacunas encontradas estão na [revisão de refatoração](docs/revisao-refatoracao.md). Esses cenários são planejamento, não validações já realizadas. Saídas interrompidas/encoding incomum podem gerar erros; acessibilidade e apresentação em diferentes telas ainda exigem validação.
 
 ## Créditos e licença
 

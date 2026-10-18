@@ -138,3 +138,26 @@ def test_falha_avaliacao_nao_exibe_senha(monkeypatch, capsys):
         cli.main([])
     assert erro.value.code == 2
     assert capsys.readouterr().out == ""
+
+
+@pytest.mark.parametrize("somente_senha", [False, True])
+def test_contrato_textual_cli_preservado(monkeypatch, capsys, somente_senha):
+    """Congela a saída de exemplo, sem depender de uma senha realmente sorteada."""
+    monkeypatch.setattr(cli, "gerar_senha", lambda *args, **kwargs: "12345678")
+    argumentos = ["-t", "8", "--sem-simbolos", "--sem-maiusculas", "--sem-minusculas"]
+    if somente_senha:
+        argumentos.append("--somente-senha")
+    assert cli.main(argumentos) == 0
+    esperado = "12345678\n"
+    if not somente_senha:
+        esperado += (
+            "Força: fraca (26.58 bits)\n"
+            "Tempo médio de força bruta offline — cenários hipotéticos:\n"
+            "  Antigo (10^6 tentativas/s): 50.00 segundos\n"
+            "  Moderno (10^11 tentativas/s): menos de 1 segundo\n"
+            "Estimativas, não garantias: dependem do hash, custo e hardware; "
+            "não cobrem vazamentos ou phishing.\n"
+        )
+    saida = capsys.readouterr()
+    assert saida.out == esperado
+    assert saida.err == ""

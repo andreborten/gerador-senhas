@@ -33,3 +33,5 @@ A saída padrão contém senha, força, entropia, dois tempos e ressalva. `--som
 A GUI Tkinter aplica a mesma configuração, fórmulas, classes e taxas deste documento. Exibe a força em texto e cor, entropia e tempos após gerar; oculta a senha por padrão e permite revelá-la. Alterar critérios limpa a avaliação anterior. Consulte o [guia da interface](interface-grafica.md).
 
 Os auxiliares de classificação e formatação rejeitam valores negativos ou não finitos (NaN/infinito) e tipos incorretos. Isso protege o uso direto da API; a geração normal já produz métricas válidas. Justificativa: [decisões técnicas](decisoes.md).
+
+A revisão v1.3.2 isola cálculos e formatação do contexto Decimal do chamador e evita conversão de inteiros enormes em float na classificação. [Evidências](revisao-refatoracao.md).

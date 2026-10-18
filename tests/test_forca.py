@@ -125,3 +125,31 @@ def test_duracao_invalida(valor):
 def test_tipo_duracao():
     with pytest.raises(TypeError):
         forca.formatar_tempo(1.0)
+
+
+@pytest.mark.parametrize("valor", [10**1000, -(10**1000)], ids=["positivo", "negativo"])
+def test_entropia_inteira_grande(valor):
+    if valor < 0:
+        with pytest.raises(ValueError):
+            forca.classificar(valor)
+    else:
+        assert forca.classificar(valor) == "super forte"
+
+
+def test_avaliacao_independe_contexto_decimal():
+    from decimal import Inexact, localcontext
+    esperada = avaliar_configuracao()
+    with localcontext() as contexto:
+        contexto.prec = 2
+        contexto.traps[Inexact] = True
+        assert avaliar_configuracao() == esperada
+
+
+def test_formatacao_independe_contexto_decimal():
+    from decimal import Inexact, localcontext
+    duracao = Decimal("123456789")
+    esperado = forca.formatar_tempo(duracao)
+    with localcontext() as contexto:
+        contexto.prec = 2
+        contexto.traps[Inexact] = True
+        assert forca.formatar_tempo(duracao) == esperado

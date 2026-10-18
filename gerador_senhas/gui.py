@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from .core import gerar_senha
-from .forca import avaliar_configuracao, formatar_tempo
+from .forca import Avaliacao, avaliar_configuracao, formatar_tempo
 
 CORES = {"fraca": "#b42318", "média": "#946200", "forte": "#1766b1", "super forte": "#08765a"}
 
@@ -65,20 +65,33 @@ class Aplicacao:
         ttk.Label(container, text="Gerador de Senhas", style="Title.TLabel").grid(sticky="w")
         ttk.Label(container, text="Segurança local. Configuração simples. Sem cadastro.",
                   style="Sub.TLabel").grid(sticky="w", pady=(4, 12))
-        config = ttk.Frame(container, style="Card.TFrame", padding=12)
-        config.grid(row=2, sticky="ew")
-        config.columnconfigure(1, weight=1)
-        ttk.Label(config, text="1. Personalize sua senha", style="Heading.TLabel").grid(
+        self._montar_configuracao(container)
+        self.botao_gerar = ttk.Button(container, text="Gerar senha", style="Primary.TButton", command=self.gerar)
+        self.botao_gerar.grid(row=3, sticky="ew", pady=10)
+        self._montar_resultado(container)
+        ttk.Label(container, text="Estimativas, não garantias. Taxas: antigo 10⁶/s; moderno 10¹¹/s. "
+                  "O tempo real depende do hash, custo e hardware. Não cobre phishing ou vazamentos.",
+                  style="Sub.TLabel", wraplength=680).grid(row=5, sticky="ew", pady=(12, 6))
+        self.rotulo_status = ttk.Label(container, textvariable=self.status, style="Sub.TLabel", wraplength=680)
+        self.rotulo_status.grid(row=6, sticky="ew")
+
+    def _montar_configuracao(self, container: ttk.Frame) -> None:
+        """Monta controles de comprimento e grupos de caracteres."""
+        configuracao = ttk.Frame(container, style="Card.TFrame", padding=12)
+        configuracao.grid(row=2, sticky="ew")
+        configuracao.columnconfigure(1, weight=1)
+        ttk.Label(configuracao, text="1. Personalize sua senha", style="Heading.TLabel").grid(
             row=0, columnspan=2, sticky="w", pady=(0, 12))
-        ttk.Label(config, text="Comprimento (8 a 256)").grid(row=1, column=0, sticky="w")
-        self.campo_tamanho = ttk.Spinbox(config, from_=8, to=256, textvariable=self.tamanho, width=8)
+        ttk.Label(configuracao, text="Comprimento (8 a 256)").grid(row=1, column=0, sticky="w")
+        self.campo_tamanho = ttk.Spinbox(configuracao, from_=8, to=256, textvariable=self.tamanho, width=8)
         self.campo_tamanho.grid(row=1, column=1, sticky="e")
         rotulos = ("Minúsculas  a–z", "Maiúsculas  A–Z", "Números  0–9", "Símbolos  !@#$…")
         for i, ((_, variavel), rotulo) in enumerate(zip(self.opcoes.items(), rotulos)):
-            ttk.Checkbutton(config, text=rotulo, variable=variavel).grid(
+            ttk.Checkbutton(configuracao, text=rotulo, variable=variavel).grid(
                 row=2 + i // 2, column=i % 2, sticky="w", pady=(10, 0))
-        self.botao_gerar = ttk.Button(container, text="Gerar senha", style="Primary.TButton", command=self.gerar)
-        self.botao_gerar.grid(row=3, sticky="ew", pady=10)
+
+    def _montar_resultado(self, container: ttk.Frame) -> None:
+        """Monta senha, força e tempos estimados."""
         resultado = ttk.Frame(container, style="Card.TFrame", padding=12)
         resultado.grid(row=4, sticky="ew")
         resultado.columnconfigure(0, weight=1)
@@ -96,11 +109,6 @@ class Aplicacao:
                   style="Heading.TLabel").grid(row=6, sticky="w")
         ttk.Label(resultado, textvariable=self.antigo).grid(row=7, sticky="w", pady=(8, 4))
         ttk.Label(resultado, textvariable=self.moderno).grid(row=8, sticky="w")
-        ttk.Label(container, text="Estimativas, não garantias. Taxas: antigo 10⁶/s; moderno 10¹¹/s. "
-                  "O tempo real depende do hash, custo e hardware. Não cobre phishing ou vazamentos.",
-                  style="Sub.TLabel", wraplength=680).grid(row=5, sticky="ew", pady=(12, 6))
-        self.rotulo_status = ttk.Label(container, textvariable=self.status, style="Sub.TLabel", wraplength=680)
-        self.rotulo_status.grid(row=6, sticky="ew")
 
     def invalidar(self, *_: str) -> None:
         """Remove resultado anterior quando critérios mudam, evitando avaliação desatualizada."""
@@ -122,10 +130,7 @@ class Aplicacao:
         """Gera e avalia a mesma configuração, mostrando erros na própria janela."""
         self.invalidar()
         try:
-            try:
-                tamanho = int(self.tamanho.get())
-            except ValueError:
-                raise ValueError("Informe um comprimento inteiro entre 8 e 256.") from None
+            tamanho = self._ler_tamanho()
             opcoes = {nome: valor.get() for nome, valor in self.opcoes.items()}
             senha = gerar_senha(tamanho, **opcoes)
             avaliacao = avaliar_configuracao(tamanho, **opcoes)
@@ -135,12 +140,23 @@ class Aplicacao:
         except OSError:
             self.status.set("Não foi possível acessar a fonte de aleatoriedade segura. Tente novamente.")
             return
+        self._exibir_resultado(senha, avaliacao)
+
+    def _ler_tamanho(self) -> int:
+        """Converte entrada textual; os limites pertencem à validação do núcleo."""
+        try:
+            return int(self.tamanho.get())
+        except ValueError:
+            raise ValueError("Informe um comprimento inteiro entre 8 e 256.") from None
+
+    def _exibir_resultado(self, senha: str, avaliacao: Avaliacao) -> None:
+        """Apresenta apenas uma geração concluída com sua avaliação correspondente."""
         self.mostrar.set(False)
         self.alternar_visibilidade()
         self.senha.set(senha)
         self.classe.set(avaliacao.classificacao.capitalize())
         self.rotulo_classe.configure(foreground=CORES[avaliacao.classificacao])
-        self.entropia.set(f"{avaliacao.entropia_bits:.2f} bits • {tamanho} caracteres")
+        self.entropia.set(f"{avaliacao.entropia_bits:.2f} bits • {len(senha)} caracteres")
         self.antigo.set(f"Antigo: {formatar_tempo(avaliacao.segundos_antigo)}")
         self.moderno.set(f"Moderno: {formatar_tempo(avaliacao.segundos_moderno)}")
         self.status.set("Senha gerada. Use Mostrar senha para visualizar. Use uma senha única por conta.")

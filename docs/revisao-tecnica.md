@@ -105,3 +105,7 @@ Os comandos de auditoria de dependências precisam de rede. A aplicação não p
 ## Limitações e próximos passos
 
 Prioridades: CI em múltiplos sistemas/versões; testes visuais em diferentes DPI e leitores de tela; revisão periódica das dependências e do runtime; diagnóstico de falhas de saída/encoding em terminais incomuns. Não há teste de intrusão, análise formal da fonte do sistema, benchmark de hardware nem auditoria completa do histórico de segredos. O tratamento de erros conhecidos é adequado ao MVP; falhas inesperadas e ambiente comprometido continuam fora dessa garantia.
+
+## Revisão posterior v1.3.2
+
+Os números anteriores são históricos. A [revisão de refatoração](revisao-refatoracao.md) registra 201 testes aprovados, 98% de cobertura medida, correções numéricas, preservação de contratos e cinco prioridades para a próxima release.

@@ -131,8 +131,10 @@ Referência: [documentação oficial do Tkinter](https://docs.python.org/3/libra
 
 ### Testes da interface
 
-`python -m pytest -q` inclui testes com widgets Tk reais: geração, máscara e revelação, erros, alterações de configuração, falha da fonte aleatória e tamanho máximo. Sem Tk ou sessão gráfica, esses testes são explicitamente ignorados; os testes de CLI e núcleo continuam disponíveis. Na validação local, **195 testes passaram, sem testes ignorados**.
+`python -m pytest -q` inclui testes com widgets Tk reais: geração, máscara e revelação, erros, alterações de configuração, falha da fonte aleatória e tamanho máximo. Sem Tk ou sessão gráfica, esses testes são explicitamente ignorados; os testes de CLI e núcleo continuam disponíveis. Na validação local, **201 testes passaram, sem testes ignorados**.
 
 ## Revisão de manutenção
 
 A revisão v1.3.1 acrescenta diagnóstico de Tkinter/sessão gráfica indisponível, mantém a CLI independente da GUI e testa limpeza do resultado e restauração da máscara em erro. Consulte [decisões técnicas](decisoes.md) e [revisão técnica, segurança e testes](revisao-tecnica.md).
+
+Revisão atual de contratos e limites: [refatoração v1.3.2](revisao-refatoracao.md).

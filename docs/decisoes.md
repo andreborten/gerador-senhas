@@ -67,3 +67,11 @@ Registro consolidado em 18/10/2026. As decisões iniciais são retrospectivas: d
 **Decisão:** Conventional Commits, tags preservadas e documentação rastreável. README registra evolução; escopo define aceite; decisões explicam escolhas; relatório técnico registra evidências e limitações.
 
 **Consequências:** versões anteriores continuam reproduzíveis; documentos históricos mantêm os números de testes de cada entrega, enquanto o README apresenta a validação atual. Não há alteração retroativa das tags.
+
+## ADR-011 — Contexto numérico independente e refatoração incremental
+
+**Contexto:** revisão v1.3.2 reproduziu falhas com inteiros enormes na classificação e com contexto Decimal modificado pelo chamador.
+
+**Decisão:** verificar finitude de float sem converter inteiros; usar Context(prec=28) novo para avaliação e formatação. Extrair contagem de combinações, parser, relatório textual e seções da GUI em funções coesas, sem duplicar validação ou mudar algoritmos públicos.
+
+**Consequências:** operações não herdam traps/precisão externa; critérios de saída padrão são preservados por testes de contrato. Os seis novos casos complementam a suíte anterior, totalizando 201 aprovados. Não foram adicionadas dependências. [Evidências e prioridades](revisao-refatoracao.md).
