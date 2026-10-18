@@ -85,7 +85,9 @@ def test_cli_fonte_falha(monkeypatch, capsys):
     assert "aleatoriedade" in saida.err
 
 
-def executar(*args, modulo=False):
+def executar(*args, modulo=False, relatorio=False):
+    if not relatorio:
+        args = (*args, "--somente-senha")
     comando = ["-m", "gerador_senhas"] if modulo else [str(ROOT / "gerador.py")]
     return subprocess.run([sys.executable, *comando, *args], cwd=ROOT,
                           capture_output=True, text=True, timeout=15)

@@ -20,6 +20,21 @@ def gerar_senha(
     Falhas da fonte criptográfica são propagadas, sem fonte alternativa.
     A amostragem por rejeição preserva uniformidade entre senhas permitidas.
     """
+    grupos = selecionar_grupos(tamanho, usar_simbolos, usar_numeros=usar_numeros,
+                              usar_maiusculas=usar_maiusculas,
+                              usar_minusculas=usar_minusculas)
+    alfabeto = "".join(grupos)
+    while True:
+        senha = "".join(secrets.choice(alfabeto) for _ in range(tamanho))
+        if all(any(caractere in grupo for caractere in senha) for grupo in grupos):
+            return senha
+
+
+def selecionar_grupos(
+    tamanho: int, usar_simbolos: bool = True, *, usar_numeros: bool = True,
+    usar_maiusculas: bool = True, usar_minusculas: bool = True,
+) -> list[str]:
+    """Valida a configuração e retorna os alfabetos disjuntos habilitados."""
     if type(tamanho) is not int:
         raise TypeError("O tamanho deve ser um número inteiro.")
     if not 8 <= tamanho <= 256:
@@ -35,8 +50,4 @@ def gerar_senha(
     grupos = [grupo for ativo, grupo in opcoes if ativo]
     if not grupos:
         raise ValueError("Selecione ao menos um tipo de caractere.")
-    alfabeto = "".join(grupos)
-    while True:
-        senha = "".join(secrets.choice(alfabeto) for _ in range(tamanho))
-        if all(any(caractere in grupo for caractere in senha) for grupo in grupos):
-            return senha
+    return grupos

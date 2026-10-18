@@ -8,8 +8,14 @@ flowchart TD
     S -->|"Falha: saída 1"| E
     G -->|"Senha candidata"| C{"Contém todos os grupos selecionados?"}
     C -->|"Não: descarta candidata"| G
-    C -->|"Sim"| O["stdout: uma senha, saída 0"]
+    C -->|"Sim: senha válida"| O["stdout: senha na primeira linha, saída 0"]
+    CLI -->|"Mesma configuração, salvo --somente-senha"| F["forca.py: conta espaço válido e entropia"]
+    F -->|"Bits: limites 40, 60 e 80"| K["fraca / média / forte / super forte"]
+    F -->|"Média de tentativas e taxas hipotéticas"| B["Força bruta offline: antigo 10^6/s; moderno 10^11/s"]
+    K -->|"Classificação e bits"| O
+    B -->|"Tempos médios e ressalvas"| O
     O -->|"Exibição local"| U
     T["pytest: propriedades, validação, rejeição e CLI"] -.->|"Verifica"| V
     T -.->|"Verifica"| G
     T -.->|"Verifica"| CLI
+    T -.->|"Verifica contagem, faixas e tempos"| F

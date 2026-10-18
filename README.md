@@ -1,6 +1,6 @@
 # Gerador de Senhas Seguras
 
-Aplicação Python de linha de comando que gera senhas localmente com aleatoriedade criptográfica. Permite configurar o tamanho e selecionar letras maiúsculas, minúsculas, números e símbolos, sem enviar senhas pela rede.
+Aplicação Python de linha de comando que gera senhas localmente com aleatoriedade criptográfica. Permite configurar o tamanho e selecionar letras maiúsculas, minúsculas, números e símbolos, sem enviar senhas pela rede. Apresenta a força e tempos médios estimados de força bruta para cenários hipotéticos de processamento antigo e moderno.
 
 [Repositório](https://github.com/andreborten/gerador-senhas) · [Escopo e requisitos](docs/escopo-mvp.md) · [Revisão do MVP](docs/revisao-escopo.md) · [Mermaid](docs/arquitetura.mmd) · [Licença MIT](LICENSE)
 
@@ -11,6 +11,8 @@ Aplicação Python de linha de comando que gera senhas localmente com aleatoried
 - Exclusão independente de símbolos, números, maiúsculas e minúsculas.
 - Pelo menos um caractere de cada grupo habilitado; nenhum dos grupos excluídos.
 - Validação de configuração, ajuda integrada e função reutilizável em Python.
+
+- Avaliação: super forte, forte, média ou fraca; entropia e dois tempos estimados.
 
 ## Instalação e ambiente
 
@@ -61,7 +63,7 @@ python -m gerador_senhas --tamanho 24
 python gerador.py --help
 ```
 
-Cada geração bem-sucedida imprime apenas uma senha em uma linha. O último exemplo de geração com três exclusões usa somente minúsculas. Os caracteres permitidos são `a-z`, `A-Z`, `0-9` e `!@#$%&*+-=?_`. Todos os grupos começam habilitados; as opções `--sem-*` removem grupos.
+Cada geração bem-sucedida imprime a senha na primeira linha, seguida da classificação, entropia e estimativas com ressalvas. Para obter somente uma linha de senha, use `python gerador.py --somente-senha`. Essa opção preserva o formato de saída anterior para scripts. O último exemplo de geração com três exclusões usa somente minúsculas. Os caracteres permitidos são `a-z`, `A-Z`, `0-9` e `!@#$%&*+-=?_`. Todos os grupos começam habilitados; as opções `--sem-*` removem grupos.
 
 | Opção | Comportamento |
 | --- | --- |
@@ -70,6 +72,7 @@ Cada geração bem-sucedida imprime apenas uma senha em uma linha. O último exe
 | `--sem-numeros` | Exclui números |
 | `--sem-maiusculas` | Exclui letras maiúsculas |
 | `--sem-minusculas` | Exclui letras minúsculas |
+| `--somente-senha` | Omite o relatório, imprimindo somente a senha |
 | `-h`, `--help` | Mostra ajuda |
 
 ### Erros
@@ -84,13 +87,46 @@ Ambos os comandos são inválidos. A CLI informa o motivo em stderr, não imprim
 ### Uso em código Python
 
 ```python
-from gerador_senhas import gerar_senha
+from gerador_senhas import gerar_senha, avaliar_configuracao
 
 senha = gerar_senha(24, usar_simbolos=False, usar_numeros=True,
                     usar_maiusculas=True, usar_minusculas=True)
+avaliacao = avaliar_configuracao(24, usar_simbolos=False, usar_numeros=True,
+                                usar_maiusculas=True, usar_minusculas=True)
+print(avaliacao.classificacao)
 ```
 
 A importação antiga `from gerador import gerar_senha` continua funcionando. A API exige tamanho inteiro (não aceita booleanos) e opções booleanas. Tipos incorretos geram `TypeError`; tamanho fora da faixa ou ausência de grupos gera `ValueError`; falhas da fonte segura propagam `OSError`.
+
+## Força e estimativa de força bruta
+
+O programa apresenta **fraca**, **média**, **forte** ou **super forte** após gerar a senha. A avaliação usa o comprimento e o alfabeto habilitado, considerando a exigência de pelo menos um caractere de cada grupo. Não avalia senhas humanas ou textos fornecidos externamente.
+
+| Entropia H em bits | Classificação |
+| --- | --- |
+| H < 40 | fraca |
+| 40 ≤ H < 60 | média |
+| 60 ≤ H < 80 | forte |
+| H ≥ 80 | super forte |
+
+Esses limiares são uma convenção educativa deste projeto, não uma certificação nem faixas prescritas pela OWASP ou NIST. O rótulo não garante proteção contra phishing, malware, reutilização ou vazamentos.
+
+Se N é o número de senhas permitidas, `H = log2(N)`. N é calculado por inclusão-exclusão: para cada subconjunto de grupos, subtrai-se ou soma-se o número de cadeias que omitem esses grupos. Com um grupo de A caracteres, `N = A^L`; com dois grupos de tamanhos a e b, `N = (a+b)^L - a^L - b^L`. A fórmula completa e os testes estão em `forca.py` e `test_forca.py`. Isso evita superestimar o espaço usando simplesmente `A^L` quando há grupos obrigatórios.
+
+Pressupõe-se senha sorteada uniformemente, atacante conhecendo tamanho e grupos, enumeração sem repetição e taxa constante. O número médio de tentativas é `(N + 1) / 2`; o tempo médio em segundos é `(N + 1) / (2 × taxa)`. Uma busca completa pode exigir N tentativas; a senha também pode ser encontrada na primeira tentativa. O valor exibido é média, não prazo mínimo ou garantia.
+
+| Cenário hipotético offline | Taxa adotada |
+| --- | --- |
+| Processamento antigo | 10^6 tentativas/s (1 milhão) |
+| Processamento moderno | 10^11 tentativas/s (100 bilhões) |
+
+As taxas são hipóteses ilustrativas de menor e maior capacidade, não benchmarks históricos ou de hardware específico. Não há medição da máquina do usuário. O algoritmo de hash, seu custo, paralelismo e hardware alteram muito a velocidade; ataques online ainda dependem de limites e bloqueios. A [OWASP sobre armazenamento de senhas](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html) explica a importância de funções apropriadas e do fator de trabalho. A fonte sustenta essas ressalvas, não os valores ou limiares escolhidos pelo projeto.
+
+Exemplo verificável: oito dígitos gerados uniformemente dão N = 100.000.000, cerca de 26,58 bits e classificação fraca. A média estimada é 50,0000005 segundos no cenário antigo e 0,000500000005 segundo no moderno. A CLI arredonda a apresentação, exibindo “menos de 1 segundo” no segundo caso. Para tempos enormes, usa notação científica em anos (ano de 365,25 dias), mantendo cálculos com inteiros e Decimal para suportar até 256 caracteres.
+
+A saída padrão contém senha, força, entropia, dois tempos e ressalva. `--somente-senha` suprime o relatório para uso em scripts; a função `gerar_senha` continua retornando apenas uma string. A API `avaliar_configuracao` recebe os mesmos parâmetros de geração e retorna `Avaliacao` com combinações, entropia, classificação e tempos em segundos. Passe exatamente a mesma configuração usada para gerar a senha.
+
+Detalhamento: [metodologia e premissas](docs/forca-senha.md).
 
 ## Tecnologias e IA generativa
 
@@ -99,6 +135,7 @@ A importação antiga `from gerador import gerar_senha` continua funcionando. A 
 | Python 3.10+ | Linguagem; referência local 3.15.0 |
 | `argparse` | Processamento de argumentos e ajuda |
 | `secrets` e `string` | Sorteios criptográficos e alfabetos |
+| `math`, `decimal`, `itertools` e `dataclasses` | Entropia, contagem e estimativas sem dependências adicionais |
 | pytest 9.1.1 | Testes unitários e integração da CLI |
 | Git / GitHub | Versionamento e distribuição |
 | Mermaid | Diagrama de fluxo e comunicação dos componentes |
@@ -120,13 +157,13 @@ A aplicação não grava senhas em arquivos ou logs e não usa rede. A saída é
 python -m pytest -q
 ```
 
-A suíte contém 96 casos: todas as 15 combinações não vazias de grupos nos tamanhos 8, 20 e 256; presença e exclusão de caracteres; valores e tipos inválidos; rejeição de candidata incompleta; falha da fonte criptográfica; ajuda, entradas por script/módulo e códigos de saída. A CLI também é executada em subprocessos reais.
+A suíte contém 144 casos: todas as 15 combinações não vazias de grupos nos tamanhos 8, 20 e 256; presença e exclusão de caracteres; valores e tipos inválidos; rejeição de candidata incompleta; falha da fonte criptográfica; ajuda, entradas por script/módulo e códigos de saída. A CLI também é executada em subprocessos reais. A avaliação é testada por enumeração independente de alfabetos pequenos, fórmulas conhecidas, limites das quatro classes, tempos, formatação, configurações inválidas e o máximo de 256 caracteres.
 
-A rejeição e a falha da fonte são testadas com substituições controladas. Não usamos ausência de duplicatas em uma amostra como prova de segurança. Os testes não demonstram imprevisibilidade criptográfica nem garantem ausência de colisões. Resultado local da revisão: **96 testes passaram em Windows/Python 3.15.0**.
+A rejeição e a falha da fonte são testadas com substituições controladas. Não usamos ausência de duplicatas em uma amostra como prova de segurança. Os testes não demonstram imprevisibilidade criptográfica nem garantem ausência de colisões. Resultado local da revisão: **144 testes passaram em Windows/Python 3.15.0**.
 
 ## Arquitetura e comunicação
 
-`core.py` concentra validação e geração; `cli.py` recebe argumentos e controla saída/erros. `gerador.py` preserva a entrada anterior e o pacote suporta execução por módulo.
+`forca.py` calcula espaço válido, entropia, classificação e tempos; `core.py` concentra validação e geração; `cli.py` recebe argumentos e controla saída/erros. `gerador.py` preserva a entrada anterior e o pacote suporta execução por módulo.
 
 ```mermaid
 flowchart TD
@@ -139,11 +176,17 @@ flowchart TD
     S -->|"Falha: saída 1"| E
     G -->|"Senha candidata"| C{"Contém todos os grupos selecionados?"}
     C -->|"Não: descarta candidata"| G
-    C -->|"Sim"| O["stdout: uma senha, saída 0"]
+    C -->|"Sim: senha válida"| O["stdout: senha na primeira linha, saída 0"]
+    CLI -->|"Mesma configuração, salvo --somente-senha"| F["forca.py: conta espaço válido e entropia"]
+    F -->|"Bits: limites 40, 60 e 80"| K["fraca / média / forte / super forte"]
+    F -->|"Média de tentativas e taxas hipotéticas"| B["Força bruta offline: antigo 10^6/s; moderno 10^11/s"]
+    K -->|"Classificação e bits"| O
+    B -->|"Tempos médios e ressalvas"| O
     O -->|"Exibição local"| U
     T["pytest: propriedades, validação, rejeição e CLI"] -.->|"Verifica"| V
     T -.->|"Verifica"| G
     T -.->|"Verifica"| CLI
+    T -.->|"Verifica contagem, faixas e tempos"| F
 ```
 
 O arquivo fonte está em [docs/arquitetura.mmd](docs/arquitetura.mmd). O diagrama representa apenas componentes implementados.
@@ -156,11 +199,14 @@ gerador-senhas/
 ├── gerador_senhas/
 │   ├── __init__.py
 │   ├── __main__.py
+│   ├── forca.py
 │   ├── core.py
 │   └── cli.py
 ├── tests/test_gerador.py
+├── tests/test_forca.py
 ├── docs/
 │   ├── arquitetura.mmd
+│   ├── forca-senha.md
 │   ├── escopo-mvp.md
 │   └── revisao-escopo.md
 ├── requirements.txt
@@ -173,7 +219,8 @@ gerador-senhas/
 ## Limitações e Próximos Passos
 
 - CLI local: não há web, API HTTP, persistência ou sincronização.
-- Não há medidor de força, verificação de vazamentos ou frases-senha.
+- A força é estimada para senhas uniformes deste gerador; não há avaliação de senhas humanas, verificação de vazamentos ou frases-senha.
+- Taxas de ataque fixas são ilustrativas; não há benchmark nem previsão específica por hash/hardware.
 - Não há saída mascarada, integração com gerenciadores ou limpeza garantida de memória.
 - Não há geração em lote ou alfabetos personalizados.
 - Python 3.10+ é o mínimo de sintaxe; a revisão não executou uma matriz de versões/sistemas.
@@ -183,11 +230,11 @@ Veja os limites e critérios de aceite completos no [escopo do MVP](docs/escopo-
 
 ## Versionamento e entrega
 
-A tag `v1.0.0` preserva a entrega anterior. A revisão com seleção dos quatro grupos, pytest e escopo formal corresponde à versão `v1.1.0`. Tags identificam pontos de entrega; não pressupõem a criação de uma página GitHub Release.
+As tags `v1.0.0` e `v1.1.0` preservam entregas anteriores. A versão `v1.2.0` inclui força e estimativas; a saída padrão passa a incluir o relatório. Scripts que dependem de uma única linha devem usar `--somente-senha`. Tags identificam pontos de entrega; não pressupõem a criação de uma página GitHub Release.
 
 ```shell
 git fetch --tags
-git switch --detach v1.1.0
+git switch --detach v1.2.0
 ```
 
 Para contribuir, crie uma branch, execute os testes e use Conventional Commits, por exemplo `feat: adiciona frases-senha` ou `docs: esclarece instalação`.

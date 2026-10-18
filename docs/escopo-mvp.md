@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Oferecer uma aplicação local de linha de comando que gere senhas aleatórias com fonte criptográfica, conforme tamanho e tipos de caracteres definidos pelo usuário. O público são pessoas que precisam criar senhas e desenvolvedores que desejam reutilizar a função Python.
+Oferecer uma aplicação local de linha de comando que gere senhas aleatórias com fonte criptográfica, conforme tamanho e tipos de caracteres definidos pelo usuário. O sistema deve também apresentar a força (super forte, forte, média ou fraca) e estimativas médias de força bruta para cenários antigo e moderno. O público são pessoas que precisam criar senhas e desenvolvedores que desejam reutilizar a função Python.
 
 ## Solução e tecnologias
 
@@ -14,7 +14,7 @@ A IA generativa (OpenAI Codex) auxiliou a implementação da função principal,
 
 | ID | Requisito | Critério de aceite |
 | --- | --- | --- |
-| RF01 | Gerar uma senha por execução | Sem argumentos, imprimir uma linha com 20 caracteres e retornar 0 |
+| RF01 | Gerar uma senha por execução | Sem argumentos, imprimir senha de 20 caracteres, seguida do relatório de força e retornar 0 |
 | RF02 | Configurar comprimento por `-t` ou `--tamanho` | Aceitar inteiros de 8 a 256, inclusive; rejeitar demais valores |
 | RF03 | Selecionar minúsculas ASCII | Habilitadas por padrão; `--sem-minusculas` exclui `a-z` |
 | RF04 | Selecionar maiúsculas ASCII | Habilitadas por padrão; `--sem-maiusculas` exclui `A-Z` |
@@ -25,6 +25,10 @@ A IA generativa (OpenAI Codex) auxiliou a implementação da função principal,
 | RF09 | Disponibilizar ajuda | `--help` descreve tamanho e as quatro opções de exclusão |
 | RF10 | Permitir reutilização | Exportar `gerar_senha` com tipagem; manter importação por `gerador` e entrada por script ou módulo |
 | RF11 | Tratar falha da fonte segura | Propagar `OSError` na API; na CLI, mensagem em stderr, retorno 1 e nenhuma senha |
+| RF12 | Classificar a força gerada | Exibir fraca (<40 bits), média (40 a <60), forte (60 a <80) ou super forte (≥80) |
+| RF13 | Estimar força bruta | Calcular espaço válido N e média (N+1)/(2×taxa); mostrar cenários antigo 10^6/s e moderno 10^11/s |
+| RF14 | Explicar as estimativas | Exibir ressalva e documentar taxas hipotéticas, limites, hash/hardware e ausência de garantia |
+| RF15 | Preservar saída para scripts | `--somente-senha` imprime apenas a senha; API original continua retornando string |
 
 ## Requisitos não funcionais
 
@@ -39,6 +43,8 @@ A IA generativa (OpenAI Codex) auxiliou a implementação da função principal,
 | RNF07 | Documentar uso e manutenção | README com instalação, exemplos, segurança, limitações, créditos, licença e versão; Mermaid coerente com código |
 | RNF08 | Evitar versionar artefatos locais | `.gitignore` cobre ambientes, caches e padrões comuns de credenciais; revisão humana continua necessária |
 | RNF09 | Compatibilidade | Sintaxe compatível com Python 3.10+; execução validada em Windows/Python 3.15.0, sem alegar matriz de plataformas testada |
+| RNF10 | Consistência matemática | Considerar grupos obrigatórios por inclusão-exclusão; testar por enumeração independente e fórmulas conhecidas |
+| RNF11 | Robustez numérica | Suportar até 256 caracteres sem overflow, com inteiros e Decimal; apresentar anos em notação científica quando necessário |
 
 ## Fluxo de uso
 
@@ -46,7 +52,37 @@ A IA generativa (OpenAI Codex) auxiliou a implementação da função principal,
 2. CLI valida os argumentos; núcleo valida tamanho, tipos e grupos.
 3. Núcleo sorteia a candidata usando a fonte criptográfica do sistema.
 4. Candidatas sem algum grupo obrigatório são descartadas e o processo se repete.
-5. CLI imprime uma única senha ou informa um erro sem imprimir senha.
+5. Após gerar, CLI calcula a avaliação com a mesma configuração e imprime senha, força e estimativas; `--somente-senha` omite o relatório. Erros não imprimem senha.
+
+## Força e estimativa de força bruta
+
+O programa apresenta **fraca**, **média**, **forte** ou **super forte** após gerar a senha. A avaliação usa o comprimento e o alfabeto habilitado, considerando a exigência de pelo menos um caractere de cada grupo. Não avalia senhas humanas ou textos fornecidos externamente.
+
+| Entropia H em bits | Classificação |
+| --- | --- |
+| H < 40 | fraca |
+| 40 ≤ H < 60 | média |
+| 60 ≤ H < 80 | forte |
+| H ≥ 80 | super forte |
+
+Esses limiares são uma convenção educativa deste projeto, não uma certificação nem faixas prescritas pela OWASP ou NIST. O rótulo não garante proteção contra phishing, malware, reutilização ou vazamentos.
+
+Se N é o número de senhas permitidas, `H = log2(N)`. N é calculado por inclusão-exclusão: para cada subconjunto de grupos, subtrai-se ou soma-se o número de cadeias que omitem esses grupos. Com um grupo de A caracteres, `N = A^L`; com dois grupos de tamanhos a e b, `N = (a+b)^L - a^L - b^L`. A fórmula completa e os testes estão em `forca.py` e `test_forca.py`. Isso evita superestimar o espaço usando simplesmente `A^L` quando há grupos obrigatórios.
+
+Pressupõe-se senha sorteada uniformemente, atacante conhecendo tamanho e grupos, enumeração sem repetição e taxa constante. O número médio de tentativas é `(N + 1) / 2`; o tempo médio em segundos é `(N + 1) / (2 × taxa)`. Uma busca completa pode exigir N tentativas; a senha também pode ser encontrada na primeira tentativa. O valor exibido é média, não prazo mínimo ou garantia.
+
+| Cenário hipotético offline | Taxa adotada |
+| --- | --- |
+| Processamento antigo | 10^6 tentativas/s (1 milhão) |
+| Processamento moderno | 10^11 tentativas/s (100 bilhões) |
+
+As taxas são hipóteses ilustrativas de menor e maior capacidade, não benchmarks históricos ou de hardware específico. Não há medição da máquina do usuário. O algoritmo de hash, seu custo, paralelismo e hardware alteram muito a velocidade; ataques online ainda dependem de limites e bloqueios. A [OWASP sobre armazenamento de senhas](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html) explica a importância de funções apropriadas e do fator de trabalho. A fonte sustenta essas ressalvas, não os valores ou limiares escolhidos pelo projeto.
+
+Exemplo verificável: oito dígitos gerados uniformemente dão N = 100.000.000, cerca de 26,58 bits e classificação fraca. A média estimada é 50,0000005 segundos no cenário antigo e 0,000500000005 segundo no moderno. A CLI arredonda a apresentação, exibindo “menos de 1 segundo” no segundo caso. Para tempos enormes, usa notação científica em anos (ano de 365,25 dias), mantendo cálculos com inteiros e Decimal para suportar até 256 caracteres.
+
+A saída padrão contém senha, força, entropia, dois tempos e ressalva. `--somente-senha` suprime o relatório para uso em scripts; a função `gerar_senha` continua retornando apenas uma string. A API `avaliar_configuracao` recebe os mesmos parâmetros de geração e retorna `Avaliacao` com combinações, entropia, classificação e tempos em segundos. Passe exatamente a mesma configuração usada para gerar a senha.
+
+Referência detalhada: [forca-senha.md](forca-senha.md).
 
 ## Segurança e limites do compromisso
 
@@ -60,7 +96,7 @@ A senha é exibida em texto claro no terminal. Captura de tela, gravação de se
 
 - Interface web, API HTTP, banco de dados, ORM e validação com bibliotecas externas.
 - Armazenamento, sincronização, área de transferência e integração com gerenciadores.
-- Estimativa de entropia/força, consulta de vazamentos e frases-senha.
+- Consulta de vazamentos, avaliação de senhas humanas, frases-senha e benchmarks reais de hardware.
 - Geração em lote, alfabetos personalizados e exclusão de caracteres ambíguos.
 - CI com matriz de versões/sistemas e empacotamento para instalação via pip.
 
@@ -68,4 +104,4 @@ Esses itens são evoluções propostas e não funcionalidades entregues.
 
 ## Aceite da entrega
 
-Executar os comandos do README em ambiente virtual novo e rodar a suíte pytest. Confirmar os requisitos RF01–RF11 e RNF01–RNF09 pela matriz acima, pelos testes e pela inspeção do código. Verificar documentação e diagrama versionados, licença MIT e tag de entrega no Git. O resultado da revisão está em [revisao-escopo.md](revisao-escopo.md).
+Executar os comandos do README em ambiente virtual novo e rodar a suíte pytest. Confirmar os requisitos RF01–RF15 e RNF01–RNF11 pela matriz acima, pelos testes e pela inspeção do código. Verificar documentação e diagrama versionados, licença MIT e tag de entrega no Git. O resultado da revisão está em [revisao-escopo.md](revisao-escopo.md).
