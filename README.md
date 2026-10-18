@@ -1,240 +1,197 @@
-# Gerador de senhas seguras
+# Gerador de Senhas Seguras
 
-Aplicação de linha de comando (CLI) em Python que gera senhas aleatórias
-localmente, usando `secrets` para aleatoriedade criptográfica. Permite escolher
-comprimento e inclusão de símbolos, sem dependências externas ou serviços web.
+Aplicação Python de linha de comando que gera senhas localmente com aleatoriedade criptográfica. Permite configurar o tamanho e selecionar letras maiúsculas, minúsculas, números e símbolos, sem enviar senhas pela rede.
 
-[Repositório](https://github.com/andreborten/gerador-senhas) ·
-[Arquitetura Mermaid](docs/arquitetura.mmd) · [Licença MIT](LICENSE)
+[Repositório](https://github.com/andreborten/gerador-senhas) · [Escopo e requisitos](docs/escopo-mvp.md) · [Revisão do MVP](docs/revisao-escopo.md) · [Mermaid](docs/arquitetura.mmd) · [Licença MIT](LICENSE)
 
 ## Funcionalidades
 
-- Senhas com **20 caracteres por padrão**; tamanho configurável de 8 a 256.
-- Presença obrigatória de letras minúsculas, maiúsculas e números.
-- Símbolos habilitados por padrão: `!@#$%&*+-=?_`.
-- Opção de gerar somente letras e números.
-- Mensagens de ajuda e rejeição de argumentos inválidos.
-- Execução local: não grava senhas em arquivos e não as envia pela rede.
+- Uma senha por execução; padrão de 20 caracteres com os quatro grupos.
+- Comprimento entre 8 e 256 caracteres, inclusive.
+- Exclusão independente de símbolos, números, maiúsculas e minúsculas.
+- Pelo menos um caractere de cada grupo habilitado; nenhum dos grupos excluídos.
+- Validação de configuração, ajuda integrada e função reutilizável em Python.
 
-## Tecnologias utilizadas
+## Instalação e ambiente
 
-| Tecnologia | Uso |
-| --- | --- |
-| Python 3.15.0 | Versão de referência para reproduzir a entrega |
-| `argparse` | Leitura de argumentos e ajuda da CLI |
-| `secrets` | Sorteio criptograficamente adequado de caracteres |
-| `string` | Conjuntos de letras e números |
-| `unittest` e `unittest.mock` | Testes unitários e simulação de falhas |
-| `subprocess`, `sys` e `pathlib` | Testes de integração executando a CLI |
-| Git e GitHub | Versionamento e publicação |
-| Mermaid | Documentação da arquitetura proposta |
-| OpenAI Codex, baseado em GPT-6 | Assistência na implementação, documentação e testes |
+Requer Git e Python 3.10+. A versão de referência é 3.15.0, registrada em `.python-version`; a validação local foi feita em Windows com essa versão. Não é necessário instalar ORM, banco de dados, Node.js ou configurar chave de API.
 
-A IA foi usada como assistência ao desenvolvimento; o programa não chama
-modelos de IA e não precisa de chave de API. Não há dependência do GitHub Copilot.
-Click é uma alternativa ao `argparse`; Node.js e HTML/CSS/JavaScript são
-alternativas para futuras versões, não tecnologias utilizadas nesta entrega.
-
-## Configuração do ambiente
-
-Pré-requisitos: Git e Python 3.10 ou superior. Para reproduzir o ambiente de
-referência, use **Python 3.15.0**, também registrado em `.python-version`.
-Esse arquivo informa a versão a gerenciadores compatíveis; não instala Python.
-
-### 1. Clonar o projeto
-
-```sh
+```shell
 git clone https://github.com/andreborten/gerador-senhas.git
 cd gerador-senhas
-python --version
-```
-
-No Linux/macOS, caso `python` não exista, use `python3` para criar o ambiente.
-
-### 2. Criar um ambiente virtual
-
-```sh
 python -m venv .venv
 ```
 
-Ative-o conforme seu terminal:
-
-**Windows — Prompt de Comando:**
-
-```bat
-.venv\Scripts\activate.bat
-```
-
-**Windows — PowerShell:**
+Ative o ambiente conforme seu terminal:
 
 ```powershell
+# Windows PowerShell
 .\.venv\Scripts\Activate.ps1
 ```
 
-Se o PowerShell bloquear a ativação, use diretamente
-`.\.venv\Scripts\python.exe` no lugar de `python` nos próximos comandos.
-Não é necessário alterar a política de execução.
-
-**Linux/macOS:**
+```bat
+:: Windows Prompt de Comando
+.venv\Scripts\activate.bat
+```
 
 ```sh
+# Linux/macOS (use python3 para criar o ambiente se necessário)
 source .venv/bin/activate
 ```
 
-### 3. Verificar dependências
+Instale as dependências de teste:
 
-```sh
+```shell
 python -m pip install -r requirements.txt
 ```
 
-O arquivo `requirements.txt` está incluído e documenta que não existem pacotes
-externos para instalar. Os módulos de execução e testes acompanham o Python;
-por isso não são listados como pacotes do PyPI. Nenhum banco de dados, ORM,
-Pydantic ou arquivo `.env` é necessário.
+A execução usa apenas a biblioteca padrão; `pytest==9.1.1` é a única dependência direta externa, usada para testes. O pip também instala suas dependências transitivas. O arquivo não é um lock completo dessas dependências.
 
-### 4. Executar
+Se o PowerShell bloquear a ativação, use diretamente `.\.venv\Scripts\python.exe` no lugar de `python`; não é necessário alterar a política de execução.
 
-```sh
+## Uso pela CLI
+
+```shell
 python gerador.py
-```
-
-O comando imprime uma senha e encerra. A saída varia a cada execução; senhas
-reais não são incluídas nos exemplos desta documentação.
-
-## Exemplos de uso
-
-```sh
-# Ajuda e opções disponíveis
-python gerador.py --help
-
-# Senha padrão de 20 caracteres com símbolos
-python gerador.py
-
-# Senha de 24 caracteres com símbolos
 python gerador.py --tamanho 24
-
-# Senha de 32 caracteres sem símbolos
 python gerador.py -t 32 --sem-simbolos
-
-# Exemplo inválido: retorna erro e não imprime senha
-python gerador.py --tamanho 7
+python gerador.py -t 20 --sem-numeros --sem-maiusculas
+python gerador.py -t 24 --sem-simbolos --sem-numeros --sem-maiusculas
+python -m gerador_senhas --tamanho 24
+python gerador.py --help
 ```
 
-| Argumento | Padrão | Efeito |
-| --- | --- | --- |
-| `-t`, `--tamanho` | `20` | Comprimento inteiro entre 8 e 256 |
-| `--sem-simbolos` | Desabilitado | Remove símbolos do alfabeto |
-| `-h`, `--help` | — | Exibe ajuda |
+Cada geração bem-sucedida imprime apenas uma senha em uma linha. O último exemplo de geração com três exclusões usa somente minúsculas. Os caracteres permitidos são `a-z`, `A-Z`, `0-9` e `!@#$%&*+-=?_`. Todos os grupos começam habilitados; as opções `--sem-*` removem grupos.
 
-O código de saída é `0` para sucesso/ajuda e `2` para argumentos inválidos.
-A aplicação não oferece API HTTP. A função Python pode ser importada:
+| Opção | Comportamento |
+| --- | --- |
+| `-t`, `--tamanho` | Inteiro entre 8 e 256; padrão 20 |
+| `--sem-simbolos` | Exclui símbolos |
+| `--sem-numeros` | Exclui números |
+| `--sem-maiusculas` | Exclui letras maiúsculas |
+| `--sem-minusculas` | Exclui letras minúsculas |
+| `-h`, `--help` | Mostra ajuda |
+
+### Erros
+
+```shell
+python gerador.py --tamanho 7
+python gerador.py --sem-simbolos --sem-numeros --sem-maiusculas --sem-minusculas
+```
+
+Ambos os comandos são inválidos. A CLI informa o motivo em stderr, não imprime senha e encerra com código 2. Sucesso e ajuda retornam 0. Falha de acesso à fonte criptográfica retorna 1, sem gerar uma senha alternativa.
+
+### Uso em código Python
 
 ```python
-from gerador import gerar_senha
+from gerador_senhas import gerar_senha
 
-senha = gerar_senha(tamanho=24, usar_simbolos=False)
-# Use a senha no destino pretendido; evite registrá-la em logs.
+senha = gerar_senha(24, usar_simbolos=False, usar_numeros=True,
+                    usar_maiusculas=True, usar_minusculas=True)
 ```
 
-A função espera tamanho inteiro e `usar_simbolos` booleano; lança `ValueError`
-para comprimento fora do intervalo. A CLI valida a conversão para inteiro.
+A importação antiga `from gerador import gerar_senha` continua funcionando. A API exige tamanho inteiro (não aceita booleanos) e opções booleanas. Tipos incorretos geram `TypeError`; tamanho fora da faixa ou ausência de grupos gera `ValueError`; falhas da fonte segura propagam `OSError`.
+
+## Tecnologias e IA generativa
+
+| Tecnologia | Uso |
+| --- | --- |
+| Python 3.10+ | Linguagem; referência local 3.15.0 |
+| `argparse` | Processamento de argumentos e ajuda |
+| `secrets` e `string` | Sorteios criptográficos e alfabetos |
+| pytest 9.1.1 | Testes unitários e integração da CLI |
+| Git / GitHub | Versionamento e distribuição |
+| Mermaid | Diagrama de fluxo e comunicação dos componentes |
+| OpenAI Codex | Assistência na lógica, testes, interface e documentação |
+
+IA é usada durante o desenvolvimento, não na execução. Não há modelo de IA embarcado, chamada de API ou dependência de Copilot. A versão exata do modelo de assistência não é fixada pelo projeto. Python/argparse é a alternativa escolhida do escopo; Click, JavaScript, ORM e Pydantic não são necessários ao MVP.
 
 ## Segurança
 
-O gerador usa escolhas uniformes por meio de `secrets.choice`. Se a candidata
-não contiver todos os tipos exigidos, ela é descartada e uma nova é sorteada.
-A rejeição preserva a distribuição uniforme entre as senhas aceitas.
+O núcleo usa `secrets.choice`, apoiado pela fonte criptográfica do sistema operacional. Cada candidata é sorteada uniformemente do alfabeto habilitado. Candidatas que não contêm todos os grupos escolhidos são rejeitadas: isso preserva a distribuição uniforme entre senhas válidas, sem inserir caracteres obrigatórios em posições previsíveis.
 
-O mínimo de 8 caracteres é um limite de compatibilidade, não uma recomendação
-para todas as situações. Prefira o padrão de 20 ou mais, conforme o serviço
-permita. Uma senha deve ser exclusiva por conta; armazene-a em um gerenciador
-de senhas e habilite autenticação multifator quando disponível.
+O padrão usa 20 caracteres. Aceitar 8 caracteres atende compatibilidade, mas não torna qualquer configuração forte: comprimento e alfabeto importam. Use senhas únicas por conta, um gerenciador de senhas e MFA quando disponível.
 
-A senha é exibida em texto no terminal. Gravações de sessão, captura de tela,
-redirecionamentos e o histórico visual do terminal podem expô-la. O programa
-não protege contra malware, phishing ou comprometimento do dispositivo.
-
-O `.gitignore` exclui caches, ambientes, logs, credenciais comuns e chaves.
-Ele não detecta segredos inseridos diretamente no código nem remove conteúdo
-já commitado. Revise os arquivos preparados com `git diff --cached`.
+A aplicação não grava senhas em arquivos ou logs e não usa rede. A saída é texto claro no terminal; gravações de sessão, capturas de tela e redirecionamento podem expô-la. Não há apagamento garantido de memória. `.gitignore` cobre padrões comuns de credenciais e caches, mas não detecta segredos inseridos em código.
 
 ## Testes automatizados
 
-Execute a partir da raiz do projeto, usando o ambiente virtual:
-
-```sh
-python -m unittest discover -s tests -v
+```shell
+python -m pytest -q
 ```
 
-A suíte contém **12 testes**, cobrindo:
+A suíte contém 96 casos: todas as 15 combinações não vazias de grupos nos tamanhos 8, 20 e 256; presença e exclusão de caracteres; valores e tipos inválidos; rejeição de candidata incompleta; falha da fonte criptográfica; ajuda, entradas por script/módulo e códigos de saída. A CLI também é executada em subprocessos reais.
 
-- **Unitários:** tamanho padrão, limites, alfabeto permitido, presença dos tipos,
-  ausência de símbolos e rejeição de tamanhos inválidos.
-- **Fluxos controlados:** descarte de candidata inválida e propagação de falha
-  da fonte aleatória, sem substituição por um gerador inseguro.
-- **Integração:** execução real da CLI, opções, ajuda, erros e códigos de saída.
+A rejeição e a falha da fonte são testadas com substituições controladas. Não usamos ausência de duplicatas em uma amostra como prova de segurança. Os testes não demonstram imprevisibilidade criptográfica nem garantem ausência de colisões. Resultado local da revisão: **96 testes passaram em Windows/Python 3.15.0**.
 
-O resultado esperado é `Ran 12 tests` seguido de `OK`. Os testes não comprovam
-imprevisibilidade criptográfica; ela depende de `secrets` e do sistema operacional.
-Não há teste probabilístico exigindo que duas senhas sejam diferentes.
+## Arquitetura e comunicação
 
-## Estrutura do projeto
+`core.py` concentra validação e geração; `cli.py` recebe argumentos e controla saída/erros. `gerador.py` preserva a entrada anterior e o pacote suporta execução por módulo.
+
+```mermaid
+flowchart TD
+    U["Usuário"] -->|"Argumentos: tamanho e grupos"| CLI["CLI: argparse"]
+    CLI -->|"Configuração"| V{"Validação: 8 a 256 e algum grupo?"}
+    V -->|"Não: erro, saída 2"| E["stderr sem senha"]
+    V -->|"Sim: alfabeto permitido"| G["Núcleo: gerar_senha"]
+    G -->|"Solicita caracteres"| S["secrets.choice: fonte criptográfica do sistema"]
+    S -->|"Caracteres sorteados"| G
+    S -->|"Falha: saída 1"| E
+    G -->|"Senha candidata"| C{"Contém todos os grupos selecionados?"}
+    C -->|"Não: descarta candidata"| G
+    C -->|"Sim"| O["stdout: uma senha, saída 0"]
+    O -->|"Exibição local"| U
+    T["pytest: propriedades, validação, rejeição e CLI"] -.->|"Verifica"| V
+    T -.->|"Verifica"| G
+    T -.->|"Verifica"| CLI
+```
+
+O arquivo fonte está em [docs/arquitetura.mmd](docs/arquitetura.mmd). O diagrama representa apenas componentes implementados.
+
+## Organização
 
 ```text
-.
+gerador-senhas/
 ├── gerador.py
-├── requirements.txt
-├── .python-version
-├── .gitignore
-├── README.md
-├── LICENSE
+├── gerador_senhas/
+│   ├── __init__.py
+│   ├── __main__.py
+│   ├── core.py
+│   └── cli.py
+├── tests/test_gerador.py
 ├── docs/
-│   └── arquitetura.mmd
-└── tests/
-    └── test_gerador.py
+│   ├── arquitetura.mmd
+│   ├── escopo-mvp.md
+│   └── revisao-escopo.md
+├── requirements.txt
+├── .gitignore
+├── .python-version
+├── LICENSE
+└── README.md
 ```
 
 ## Limitações e Próximos Passos
 
-O diagrama Mermaid descreve a arquitetura de evolução. Na implementação atual,
-as responsabilidades estão concentradas em funções de `gerador.py`.
+- CLI local: não há web, API HTTP, persistência ou sincronização.
+- Não há medidor de força, verificação de vazamentos ou frases-senha.
+- Não há saída mascarada, integração com gerenciadores ou limpeza garantida de memória.
+- Não há geração em lote ou alfabetos personalizados.
+- Python 3.10+ é o mínimo de sintaxe; a revisão não executou uma matriz de versões/sistemas.
+- Próximas evoluções: CI multiplataforma, empacotamento, frases-senha e opções adicionais de alfabeto.
 
-Ainda não implementado:
+Veja os limites e critérios de aceite completos no [escopo do MVP](docs/escopo-mvp.md).
 
-- Seleção individual de números, maiúsculas e minúsculas.
-- Estimativa de força/entropia e avisos para configurações fracas.
-- Modo de frase-senha com palavras sorteadas de uma lista adequada.
-- Interface web, saída mascarada e integração com gerenciadores de senhas.
-- Pipeline de integração contínua e validação em múltiplos sistemas operacionais.
-- Validação explícita de todos os tipos de argumentos da função importável.
+## Versionamento e entrega
 
-A entrega foi validada no Windows com Python 3.15.0. Python 3.10 é o mínimo
-declarado, mas esta entrega não inclui uma matriz de testes para todas as versões.
-Não há armazenamento, histórico de senhas ou banco de dados; qualquer expansão
-nessa direção exigirá um projeto específico de proteção de segredos.
+A tag `v1.0.0` preserva a entrega anterior. A revisão com seleção dos quatro grupos, pytest e escopo formal corresponde à versão `v1.1.0`. Tags identificam pontos de entrega; não pressupõem a criação de uma página GitHub Release.
 
-## Versão de entrega
-
-A tag **[v1.0.0](https://github.com/andreborten/gerador-senhas/tree/v1.0.0)**
-marca a primeira entrega da CLI documentada e testada. Ela cobre as funções
-atuais; os itens de evolução acima não fazem parte dessa versão.
-
-Para obter exatamente a entrega:
-
-```sh
+```shell
 git fetch --tags
-git switch --detach v1.0.0
+git switch --detach v1.1.0
 ```
 
-Para contribuir a partir dela, crie uma branch com `git switch -c minha-melhoria`.
-Use mensagens no padrão Conventional Commits, como `feat:`, `fix:`, `test:`
-e `docs:`. Uma tag marca o código; não foi criada uma página de Release separada.
+Para contribuir, crie uma branch, execute os testes e use Conventional Commits, por exemplo `feat: adiciona frases-senha` ou `docs: esclarece instalação`.
 
 ## Créditos e licença
 
-- Autoria e manutenção: [andreborten](https://github.com/andreborten).
-- Assistência de desenvolvimento: OpenAI Codex, baseado em GPT-6.
-- Bibliotecas utilizadas: biblioteca padrão do Python e seus contribuidores.
-
-Distribuído sob a **licença MIT**. Consulte [LICENSE](LICENSE) para os termos
-completos, incluindo aviso de copyright e ausência de garantia.
+Autor: [andreborten](https://github.com/andreborten). Desenvolvimento assistido por OpenAI Codex. Projeto distribuído sob a [licença MIT](LICENSE).

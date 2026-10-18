@@ -1,102 +1,128 @@
-"""Testes de contrato da geração e integração com a CLI."""
-
-from pathlib import Path
+"""Testes de propriedades, validação, fonte aleatória e interface real."""
+import itertools
 import string
 import subprocess
 import sys
-import unittest
-from unittest.mock import patch
+from pathlib import Path
+
+import pytest
 
 from gerador import gerar_senha
+from gerador_senhas import core, cli
+
+ROOT = Path(__file__).resolve().parents[1]
+GRUPOS = (string.ascii_lowercase, string.ascii_uppercase, string.digits, core.SIMBOLOS)
+OPCOES = ("usar_minusculas", "usar_maiusculas", "usar_numeros", "usar_simbolos")
+COMBINACOES = list(itertools.product((False, True), repeat=4))[1:]
 
 
-SCRIPT = Path(__file__).resolve().parents[1] / "gerador.py"
-SIMBOLOS = "!@#$%&*+-=?_"
+@pytest.mark.parametrize("ativos", COMBINACOES)
+@pytest.mark.parametrize("tamanho", [8, 20, 256])
+def test_grupos_e_tamanho(ativos, tamanho):
+    senha = gerar_senha(tamanho, **dict(zip(OPCOES, ativos)))
+    grupos = [grupo for ativo, grupo in zip(ativos, GRUPOS) if ativo]
+    assert len(senha) == tamanho
+    assert set(senha) <= set("".join(grupos))
+    assert all(set(senha) & set(grupo) for grupo in grupos)
 
 
-class TestGerador(unittest.TestCase):
-    def assert_criterios(self, senha, tamanho, simbolos=True):
-        self.assertEqual(len(senha), tamanho)
-        grupos = [string.ascii_lowercase, string.ascii_uppercase, string.digits]
-        if simbolos:
-            grupos.append(SIMBOLOS)
-        self.assertTrue(set(senha) <= set("".join(grupos)))
-        for grupo in grupos:
-            self.assertTrue(any(c in grupo for c in senha))
-
-    def test_padrao_de_vinte_caracteres(self):
-        self.assert_criterios(gerar_senha(), 20)
-
-    def test_tamanhos_e_limites(self):
-        for tamanho in (8, 16, 24, 64, 256):
-            with self.subTest(tamanho=tamanho):
-                self.assert_criterios(gerar_senha(tamanho), tamanho)
-
-    def test_sem_simbolos(self):
-        for tamanho in (8, 20, 256):
-            with self.subTest(tamanho=tamanho):
-                self.assert_criterios(gerar_senha(tamanho, False), tamanho, False)
-
-    def test_tamanhos_invalidos(self):
-        for tamanho in (-1, 0, 7, 257):
-            with self.subTest(tamanho=tamanho):
-                with self.assertRaises(ValueError):
-                    gerar_senha(tamanho)
-
-    def test_descarta_candidata_sem_tipo_obrigatorio(self):
-        # Primeira candidata inválida, segunda válida; não depende de sorte.
-        with patch("gerador.secrets.choice", side_effect=list("aaaaaaaaAa1!bcde")):
-            self.assertEqual(gerar_senha(8), "Aa1!bcde")
-
-    def test_falha_da_fonte_aleatoria_nao_gera_fallback(self):
-        with patch("gerador.secrets.choice", side_effect=OSError("fonte indisponível")):
-            with self.assertRaises(OSError):
-                gerar_senha()
+def test_padrao():
+    senha = gerar_senha()
+    assert len(senha) == 20
+    assert all(set(senha) & set(grupo) for grupo in GRUPOS)
 
 
-class TestCLI(unittest.TestCase):
-    def executar(self, *args):
-        return subprocess.run(
-            [sys.executable, str(SCRIPT), *args], capture_output=True,
-            text=True, encoding="utf-8", errors="replace", timeout=10,
-        )
-
-    def test_execucao_padrao(self):
-        resultado = self.executar()
-        self.assertEqual(resultado.returncode, 0)
-        self.assertEqual(resultado.stderr, "")
-        self.assertEqual(len(resultado.stdout.strip()), 20)
-        self.assertEqual(len(resultado.stdout.splitlines()), 1)
-
-    def test_opcoes_de_tamanho_e_simbolos(self):
-        resultado = self.executar("--tamanho", "24", "--sem-simbolos")
-        self.assertEqual(resultado.returncode, 0)
-        senha = resultado.stdout.strip()
-        self.assertEqual(len(senha), 24)
-        self.assertTrue(set(senha) <= set(string.ascii_letters + string.digits))
-
-    def test_tamanho_fora_do_intervalo(self):
-        resultado = self.executar("-t", "7")
-        self.assertEqual(resultado.returncode, 2)
-        self.assertEqual(resultado.stdout, "")
-        self.assertIn("8 e 256", resultado.stderr)
-
-    def test_tamanho_nao_numerico(self):
-        resultado = self.executar("-t", "abc")
-        self.assertEqual(resultado.returncode, 2)
-        self.assertEqual(resultado.stdout, "")
-
-    def test_opcao_desconhecida(self):
-        resultado = self.executar("--inexistente")
-        self.assertEqual(resultado.returncode, 2)
-        self.assertEqual(resultado.stdout, "")
-
-    def test_ajuda(self):
-        resultado = self.executar("--help")
-        self.assertEqual(resultado.returncode, 0)
-        self.assertIn("--tamanho", resultado.stdout)
-        self.assertIn("--sem-simbolos", resultado.stdout)
+@pytest.mark.parametrize("tamanho", [-1, 0, 7, 257])
+def test_tamanho_invalido(tamanho):
+    with pytest.raises(ValueError):
+        gerar_senha(tamanho)
 
 
-if __name__ == "__main__":
-    unittest.main()
+@pytest.mark.parametrize("tamanho", [True, 20.0, "20", None])
+def test_tipo_tamanho(tamanho):
+    with pytest.raises(TypeError):
+        gerar_senha(tamanho)
+
+
+@pytest.mark.parametrize("opcao", OPCOES)
+@pytest.mark.parametrize("valor", [0, 1, "sim", None])
+def test_tipo_opcao(opcao, valor):
+    with pytest.raises(TypeError):
+        gerar_senha(**{opcao: valor})
+
+
+def test_sem_grupos():
+    with pytest.raises(ValueError):
+        gerar_senha(**dict.fromkeys(OPCOES, False))
+
+
+def test_rejeita_candidata_incompleta(monkeypatch):
+    caracteres = iter("aaaaaaaaAa1!bcde")
+    chamadas = []
+    def escolher(alfabeto):
+        chamadas.append(alfabeto)
+        return next(caracteres)
+    monkeypatch.setattr(core.secrets, "choice", escolher)
+    assert gerar_senha(8) == "Aa1!bcde"
+    assert chamadas == ["".join(GRUPOS)] * 16
+
+
+def falhar(_):
+    raise OSError("fonte indisponível")
+
+
+def test_fonte_falha_sem_alternativa(monkeypatch):
+    monkeypatch.setattr(core.secrets, "choice", falhar)
+    with pytest.raises(OSError):
+        gerar_senha()
+
+
+def test_cli_fonte_falha(monkeypatch, capsys):
+    monkeypatch.setattr(core.secrets, "choice", falhar)
+    assert cli.main([]) == 1
+    saida = capsys.readouterr()
+    assert saida.out == ""
+    assert "aleatoriedade" in saida.err
+
+
+def executar(*args, modulo=False):
+    comando = ["-m", "gerador_senhas"] if modulo else [str(ROOT / "gerador.py")]
+    return subprocess.run([sys.executable, *comando, *args], cwd=ROOT,
+                          capture_output=True, text=True, timeout=15)
+
+
+@pytest.mark.parametrize("ativos", COMBINACOES)
+def test_cli_combinacoes(ativos):
+    flags = ["--sem-" + opcao.removeprefix("usar_")
+             for ativo, opcao in zip(ativos, OPCOES) if not ativo]
+    resultado = executar("--tamanho", "24", *flags)
+    assert resultado.returncode == 0
+    assert resultado.stderr == ""
+    assert len(resultado.stdout.splitlines()) == 1
+    senha = resultado.stdout.strip()
+    grupos = [grupo for ativo, grupo in zip(ativos, GRUPOS) if ativo]
+    assert len(senha) == 24
+    assert set(senha) <= set("".join(grupos))
+    assert all(set(senha) & set(grupo) for grupo in grupos)
+
+
+@pytest.mark.parametrize("args", [
+    ["-t", "7"], ["-t", "257"], ["-t", "abc"], ["--inexistente"],
+    ["--sem-simbolos", "--sem-numeros", "--sem-maiusculas", "--sem-minusculas"],
+])
+def test_cli_erros(args):
+    resultado = executar(*args)
+    assert resultado.returncode == 2
+    assert resultado.stdout == ""
+    assert resultado.stderr
+
+
+@pytest.mark.parametrize("modulo", [False, True])
+def test_entradas_e_ajuda(modulo):
+    resultado = executar(modulo=modulo)
+    assert resultado.returncode == 0
+    assert len(resultado.stdout.strip()) == 20
+    ajuda = executar("--help", modulo=modulo)
+    assert ajuda.returncode == 0
+    for flag in ("--tamanho", "--sem-simbolos", "--sem-numeros", "--sem-maiusculas", "--sem-minusculas"):
+        assert flag in ajuda.stdout

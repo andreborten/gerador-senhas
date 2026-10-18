@@ -1,4 +1,2 @@
-# Sem dependencias externas de execucao ou testes.
-# Execucao: argparse, secrets e string (biblioteca padrao).
-# Testes: unittest, unittest.mock, subprocess, sys e pathlib (biblioteca padrao).
-# Python de referencia: 3.15.0; minimo declarado: 3.10.
+# Execução: biblioteca padrão. Dependência para testes:
+pytest==9.1.1
