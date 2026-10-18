@@ -51,4 +51,3 @@ credenciais. README e diagramas em `docs/` são mantidos no versionamento.
 Arquivos `.env.example` e `.env.sample` devem conter apenas valores fictícios.
 As regras não detectam segredos inseridos no código nem removem arquivos já
 versionados; revise `git diff --cached` antes de cada commit.
-
