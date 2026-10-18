@@ -5,7 +5,7 @@ import secrets
 import string
 
 
-def gerar_senha(tamanho=16, usar_simbolos=True):
+def gerar_senha(tamanho=20, usar_simbolos=True):
     grupos = [string.ascii_lowercase, string.ascii_uppercase, string.digits]
     if usar_simbolos:
         grupos.append("!@#$%&*+-=?_")
@@ -21,7 +21,7 @@ def gerar_senha(tamanho=16, usar_simbolos=True):
 
 def main():
     parser = argparse.ArgumentParser(description="Gera uma senha aleatória localmente.")
-    parser.add_argument("-t", "--tamanho", type=int, default=16, help="de 8 a 256 (padrão: 16)")
+    parser.add_argument("-t", "--tamanho", type=int, default=20, help="de 8 a 256 (padrão: 20)")
     parser.add_argument("--sem-simbolos", action="store_true", help="usa apenas letras e números")
     args = parser.parse_args()
     try:

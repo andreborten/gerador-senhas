@@ -1,4 +1,4 @@
-# Sem dependencias externas para a arquitetura Python CLI definida no Mermaid.
-# argparse: interface CLI; secrets: aleatoriedade criptografica.
-# string: conjuntos de caracteres; math: estimativa de forca.
-# unittest: testes automatizados. Todos pertencem a biblioteca padrao do Python.
+# Sem dependencias externas de execucao ou testes.
+# Execucao: argparse, secrets e string (biblioteca padrao).
+# Testes: unittest, unittest.mock, subprocess, sys e pathlib (biblioteca padrao).
+# Python de referencia: 3.15.0; minimo declarado: 3.10.
