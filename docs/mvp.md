@@ -71,6 +71,8 @@ No Linux/macOS, substitua esse caminho por `.venv/bin/python`. Se necessário, u
 
 A execução não exige pacotes externos. `requirements.txt` contém `pytest==9.1.1` para os testes. Não é necessário banco de dados, servidor, conta de serviço ou chave de API.
 
+No Windows, também é possível abrir `iniciar.bat` por duplo clique. O iniciador mantém o resultado ou erro visível até uma tecla ser pressionada; abrir `gerador.py` diretamente pode fechar a janela ao terminar.
+
 ## Roteiro de demonstração e aceite
 
 Com o ambiente ativado, execute:

@@ -51,6 +51,12 @@ A execução usa apenas a biblioteca padrão; `pytest==9.1.1` é a única depend
 
 Se o PowerShell bloquear a ativação, use diretamente `.\.venv\Scripts\python.exe` no lugar de `python`; não é necessário alterar a política de execução.
 
+## Abrir no Windows por duplo clique
+
+Abra **`iniciar.bat`** na pasta do projeto. Ele usa o Python de `.venv` quando disponível (senão, `python` do PATH), gera a senha e mantém a janela aberta até uma tecla ser pressionada. Erros também permanecem visíveis. É necessário manter o arquivo junto de `gerador.py` e do pacote `gerador_senhas`.
+
+Ao abrir `gerador.py` diretamente, o Windows pode fechar a janela assim que a CLI termina. Isso pode acontecer mesmo quando a execução é bem-sucedida. Para definir opções, abra um terminal na pasta do projeto e use os comandos abaixo. A CLI continua encerrando normalmente para permitir automação.
+
 ## Uso pela CLI
 
 ```shell
@@ -195,6 +201,7 @@ O arquivo fonte está em [docs/arquitetura.mmd](docs/arquitetura.mmd). O diagram
 
 ```text
 gerador-senhas/
+├── iniciar.bat
 ├── gerador.py
 ├── gerador_senhas/
 │   ├── __init__.py
